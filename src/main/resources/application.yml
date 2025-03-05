@@ -1,0 +1,10 @@
+server:
+  port: 8080
+  servlet:
+    context-path: /gruastremart-core-api
+spring:
+  profiles:
+    active: ${PROFILE_ACTIVE:local}
+  web:
+    resources:
+      add-mappings: false
