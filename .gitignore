@@ -211,5 +211,3 @@ hs_err_pid*
 
 ### Extras ###
 *.attach*
-src/main/resources/application-local.yml
-src/main/java/com/resimanager/backoffice/config/security/SecurityConfig.java

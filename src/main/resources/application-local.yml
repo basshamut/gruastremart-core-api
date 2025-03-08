@@ -1,0 +1,16 @@
+spring:
+  jackson:
+    default-property-inclusion: NON_NULL
+  banner:
+    location: classpath:banner.txt
+  data:
+    mongodb:
+      uri: ${MONGODB_LOCAL_URL}
+  web:
+    resources:
+      add-mappings: true
+app:
+  security:
+    issuerInfo: ${SECURITY_ISSUER_INFO}}
+    superSecretKey: ${SECURITY_SUPER_SECRET_KEY}
+    tokenExpirationTimeInMinutes: ${SECURITY_TOKEN_EXPIRATION_TIME_IN_MINUTES}
