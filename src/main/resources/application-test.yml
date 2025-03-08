@@ -11,6 +11,6 @@ spring:
       add-mappings: true
 app:
   security:
-    issuerInfo: ${SECURITY_ISSUER_INFO}}
+    issuerInfo: ${SECURITY_ISSUER_INFO}
     superSecretKey: ${SECURITY_SUPER_SECRET_KEY}
     tokenExpirationTimeInMinutes: ${SECURITY_TOKEN_EXPIRATION_TIME_IN_MINUTES}
