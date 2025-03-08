@@ -1,10 +1,10 @@
 package com.gruastremart.api.persistance.repository;
 
-import com.gruastremart.api.persistance.entity.CraneRequest;
+import com.gruastremart.api.persistance.entity.CraneDemand;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface CraneDemandRepository extends MongoRepository<CraneRequest, String> {
+public interface CraneDemandRepository extends MongoRepository<CraneDemand, String> {
 }
 
