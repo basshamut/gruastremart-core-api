@@ -9,12 +9,12 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.util.Date;
 
-@Document(collection = "crane_requests")
+@Document(collection = "crane_demands")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class CraneRequest {
+public class CraneDemand {
     @Id
     private String id;
     private String description;
