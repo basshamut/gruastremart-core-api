@@ -12,5 +12,7 @@ public class SecurityProperties {
     private String issuerInfo;
     private String superSecretKey;
     private Integer tokenExpirationTimeInMinutes;
+
+    private String supabaseSecret;
 }
 
