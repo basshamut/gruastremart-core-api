@@ -11,8 +11,8 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class LoginResponseJson {
-    private String type;
-    private String token;
+public class LoginRequestDto {
+    private String username;
+    private String password;
 
 }

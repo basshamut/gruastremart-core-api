@@ -2,7 +2,11 @@ package com.gruastremart.api.service;
 
 import lombok.AllArgsConstructor;
 import com.gruastremart.api.dto.AuthDto;
+import com.gruastremart.api.dto.UserDto;
+import com.gruastremart.api.exception.ServiceException;
 import com.gruastremart.api.persistance.repository.UserRepository;
+import com.gruastremart.api.service.mapper.UserMapper;
+
 import org.springframework.stereotype.Repository;
 
 import java.util.Base64;
@@ -39,4 +43,9 @@ public class UserService {
 //        }
     }
 
+    public UserDto findUserByEmail(String userId) {
+        var user = userRepository.findByEmail(userId).orElseThrow(() -> new ServiceException("User not found", 404));
+        var userMapped = UserMapper.MAPPER.mapToDto(user);
+        return userMapped;
+    }
 }

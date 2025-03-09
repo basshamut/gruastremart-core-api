@@ -30,10 +30,14 @@ public class CraneDemandService {
         return new PageImpl<>(list.getContent(), pageable, countConstruction);
     }
 
-    public CraneDemandResponseDto getCraneDemandById(String ownerId) {
-        return craneDemandRepository.findById(ownerId)
-                .map(CraneDemandMapper.MAPPER::mapToDto)
-                .orElseThrow(() -> new RuntimeException("Crane request not found"));
+    public CraneDemandResponseDto getCraneDemandById(String craneDemandId) {
+        var craneDemand = craneDemandRepository.findById(craneDemandId);
+        if (craneDemand.isEmpty()) {
+            throw new ServiceException("Crane request not found", 404);
+        }
+
+
+        return CraneDemandMapper.MAPPER.mapToDto(craneDemand.get());
     }
 
     public CraneDemandResponseDto createCraneDemand(CraneDemandCreateRequestDto craneDemandCreateRequestDto) {

@@ -6,6 +6,9 @@ import com.gruastremart.api.dto.CraneDemandUpdateRequestDto;
 import com.gruastremart.api.exception.ServiceException;
 import com.gruastremart.api.service.CraneDemandService;
 import com.gruastremart.api.utils.Tools;
+
+import static com.gruastremart.api.utils.Constants.API_VERSION_PATH;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -22,7 +25,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/crane-requests")
+@RequestMapping(value = API_VERSION_PATH + "/crane-demands")
 public class CraneDemandController {
 
     private final CraneDemandService craneDemandService;

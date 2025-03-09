@@ -17,7 +17,7 @@
         <springdoc.openapi.ui.version>1.4.8</springdoc.openapi.ui.version>
         <lombok.version>1.18.30</lombok.version>
         <webjars-locator.version>0.52</webjars-locator.version>
-        <classgraph.version>4.8.104</classgraph.version>
+        <classgraph.version>4.8.150</classgraph.version>
         <mapstruct.version>1.5.3.Final</mapstruct.version>
         <aspectj.version>1.9.7</aspectj.version>
         <de.flapdoodle.embed.mongo.version>4.6.1</de.flapdoodle.embed.mongo.version>
