@@ -1,4 +1,23 @@
+# Etapa de construcción: compila la aplicación usando Maven
+FROM eclipse-temurin:21-jdk-alpine AS build
+WORKDIR /app
+
+# Actualizar apk e instalar Maven
+RUN apk update && apk add --no-cache maven
+
+# Copiar los archivos de configuración y código
+COPY pom.xml .
+COPY src ./src
+
+# Compilar el proyecto omitiendo los tests
+RUN mvn clean package -DskipTests
+
+# Etapa final: imagen para ejecutar la aplicación
 FROM eclipse-temurin:21-jdk-alpine
-COPY target/taskmanager-backoffice-1.0-SNAPSHOT.jar app.jar
+WORKDIR /app
+
+# Copiar el JAR generado desde la etapa build
+COPY --from=build /app/target/gruastremart-core-api-1.0-SNAPSHOT.jar app.jar
+
 EXPOSE 8080
-ENTRYPOINT ["java","-jar","/app.jar"]
+ENTRYPOINT ["java", "-jar", "app.jar"]

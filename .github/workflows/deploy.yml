@@ -66,6 +66,6 @@ jobs:
             # Ejecutar el contenedor con el archivo .env
             docker run -d \
               --name gruastremart-core-api \
-              -p 8082:8080 \
+              -p 8083:8080 \
               --env-file /home/${{ secrets.VPS_SSH_USERNAME }}/.env \
               gruastremart-core-api:latest
