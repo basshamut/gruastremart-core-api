@@ -1,6 +1,7 @@
 package com.gruastremart.api.config.security;
 
 import static com.gruastremart.api.utils.Constants.LOGIN_URL;
+import static com.gruastremart.api.utils.Constants.SEND_EMAIL_URL;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -30,7 +31,8 @@ public class SecurityConfig {
             "/v3/api-docs/**",
             "/console/**",
             "/error",
-            LOGIN_URL
+            LOGIN_URL,
+            SEND_EMAIL_URL
     };
 
     @Bean

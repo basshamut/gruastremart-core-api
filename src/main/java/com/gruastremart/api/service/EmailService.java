@@ -1,6 +1,5 @@
 package com.gruastremart.api.service;
 
-import com.gruastremart.api.dto.EmailRequestDto;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -8,8 +7,9 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 
+import com.gruastremart.api.dto.EmailRequestDto;
+
 import jakarta.mail.internet.MimeMessage;
-import jakarta.mail.MessagingException;
 
 
 @Service
@@ -66,7 +66,7 @@ public class EmailService {
             send = true;
             logger.info("¡Correo enviado correctamente!");
 
-        } catch (MessagingException e) {
+        } catch (Exception e) {
             logger.error("Error al enviar el correo de contacto: ", e);
         }
 
