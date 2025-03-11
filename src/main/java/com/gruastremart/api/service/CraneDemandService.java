@@ -41,7 +41,8 @@ public class CraneDemandService {
         if (user.isEmpty()) {
             throw new ServiceException("User not found", 404);
         }
-        var craneDemandSaved = buildCraneDemandEntityForSave(craneDemandCreateRequestDto);
+        var craneDemandBuilded = buildCraneDemandEntityForSave(craneDemandCreateRequestDto);
+        var craneDemandSaved = craneDemandRepository.save(craneDemandBuilded);
         return CraneDemandMapper.MAPPER.mapToDto(craneDemandSaved);
     }
 
@@ -49,7 +50,7 @@ public class CraneDemandService {
         var craneDemandMapped = CraneDemandMapper.MAPPER.mapToEntity(craneDemandCreateRequestDto);
         craneDemandMapped.setState("ACTIVE");
         craneDemandMapped.setDueDate(new Date());
-        return craneDemandRepository.save(craneDemandMapped);
+        return craneDemandMapped;
     }
 
     public Optional<CraneDemandResponseDto> updateCraneDemand(String craneDemandId, CraneDemandUpdateRequestDto CraneDemand) {
