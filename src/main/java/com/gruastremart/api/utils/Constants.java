@@ -20,4 +20,5 @@ public class Constants {
 
     // Email
     public static final String SEND_EMAIL_URL = API_VERSION_PATH + "/emails/contact";
+    public static final String SEND_CONTACTFORM_URL = API_VERSION_PATH + "/contact-forms";
 }

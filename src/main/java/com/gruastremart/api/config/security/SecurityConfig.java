@@ -32,7 +32,8 @@ public class SecurityConfig {
             "/console/**",
             "/error",
             LOGIN_URL,
-            SEND_EMAIL_URL
+            SEND_EMAIL_URL,
+            SEND_CONTACTFORM_URL
     };
 
     @Bean
