@@ -5,14 +5,13 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.Set;
-
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder(toBuilder = true)
-public class AuthDto {
-    private String username;
+public class UserDto {
+    private String id;
+    private String email;
     private String password;
-    private Set<String> authorities;
+    private String role;// CLIENT / CRANE_OPERATOR / ADMIN
 }

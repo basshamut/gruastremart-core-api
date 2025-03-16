@@ -9,8 +9,29 @@ spring:
   web:
     resources:
       add-mappings: true
+  mail:
+    protocol: smtp
+    host: smtp.gmail.com
+    port: 587
+    username: ${MAIL_USER}
+    password: ${MAIL_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+          timeout: 60000
+          writetimeout: 60000
+          connectiontimeout: 60000
+          ssl:
+            protocols: TLSv1.2
+          debug: true
 app:
   security:
-    issuerInfo: ${SECURITY_ISSUER_INFO}
-    superSecretKey: ${SECURITY_SUPER_SECRET_KEY}
-    tokenExpirationTimeInMinutes: ${SECURITY_TOKEN_EXPIRATION_TIME_IN_MINUTES}
+    supabaseSecret: ${SUPABASE_SECURITY_SECRET_KEY}
+mailer:
+  from: "job.jesus.1702@gmail.com"
+  to: "tremartca@gmail.com"
+  subject: "Nuevo mensaje de contacto (Prueba Jesus)"

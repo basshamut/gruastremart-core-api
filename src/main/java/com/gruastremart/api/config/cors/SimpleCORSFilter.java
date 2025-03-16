@@ -38,7 +38,12 @@ public class SimpleCORSFilter implements Filter {
         response.setHeader("Access-Control-Max-Age", "3600");
         response.setHeader("Access-Control-Allow-Headers", "Authorization,Content-Type, Accept, X-Requested-With, remember-me");
         response.setHeader("Access-Control-Expose-Headers", "Content-Disposition, Authorization");
-        chain.doFilter(req, res);
+
+        if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
+            response.setStatus(HttpServletResponse.SC_OK);
+        } else {
+            chain.doFilter(req, res);
+        }
     }
 
     @Override

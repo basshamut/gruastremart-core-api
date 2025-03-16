@@ -1,0 +1,71 @@
+name: Deploy to Docker on VPS
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      # 1. Checkout del repositorio
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      # 2. Configurar Java 21 (usando Temurin)
+      - name: Set up Java 21
+        uses: actions/setup-java@v3
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      # 3. Compilar la aplicación con Maven (omitiendo tests)
+      - name: Build with Maven
+        run: mvn clean package -DskipTests
+
+      # 4. Construir la imagen Docker (se espera que tengas un Dockerfile en el repositorio)
+      - name: Build Docker image
+        run: docker build -t gruastremart-core-api:latest .
+
+      # 5. Guardar la imagen Docker en un tarball
+      - name: Save Docker image as tarball
+        run: docker save gruastremart-core-api:latest > gruastremart-core-api.tar
+
+      # 6. Copiar el tarball con la imagen a la VPS
+      - name: Copy Docker image tarball to VPS
+        uses: appleboy/scp-action@v0.1.0
+        with:
+          host: ${{ secrets.VPS_SSH_HOST }}
+          username: ${{ secrets.VPS_SSH_USERNAME }}
+          password: ${{ secrets.VPS_SSH_PASSWORD }}
+          port: 22
+          source: "gruastremart-core-api.tar"
+          target: "/home/${{ secrets.VPS_SSH_USERNAME }}/"
+
+      # 7. Conectarse vía SSH para limpiar, cargar la imagen y ejecutar el contenedor Docker
+      - name: Deploy Docker Container via SSH
+        uses: appleboy/ssh-action@v0.1.0
+        with:
+          host: ${{ secrets.VPS_SSH_HOST }}
+          username: ${{ secrets.VPS_SSH_USERNAME }}
+          password: ${{ secrets.VPS_SSH_PASSWORD }}
+          port: 22
+          script: |
+            # Eliminar cualquier contenedor existente con el mismo nombre
+            docker rm -f gruastremart-core-api || true
+            # Eliminar la imagen existente con el mismo tag (si existe)
+            docker rmi -f gruastremart-core-api:latest || true
+            
+            # Guardar el archivo .env en la VPS desde GitHub Secrets
+            echo "${{ secrets.ENV_FILE }}" > /home/${{ secrets.VPS_SSH_USERNAME }}/.env
+            
+            # Cargar la nueva imagen Docker desde el tarball
+            docker load -i /home/${{ secrets.VPS_SSH_USERNAME }}/gruastremart-core-api.tar
+            
+            # Ejecutar el contenedor con el archivo .env
+            docker run -d \
+              --name gruastremart-core-api \
+              -p 8083:8080 \
+              --env-file /home/${{ secrets.VPS_SSH_USERNAME }}/.env \
+              gruastremart-core-api:latest
