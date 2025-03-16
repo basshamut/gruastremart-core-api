@@ -1,37 +1,31 @@
 package com.gruastremart.api.controller;
 
-import com.gruastremart.api.dto.CraneDemandCreateRequestDto;
-import com.gruastremart.api.dto.CraneDemandResponseDto;
-import com.gruastremart.api.dto.CraneDemandUpdateRequestDto;
-import com.gruastremart.api.exception.ServiceException;
-import com.gruastremart.api.service.CraneDemandService;
-import com.gruastremart.api.utils.Tools;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
+import com.gruastremart.api.dto.ContactFormCreateRequestDto;
+import com.gruastremart.api.dto.ContactFormResponseDto;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import static com.gruastremart.api.utils.Constants.API_VERSION_PATH;
+
 @RestController
-@RequestMapping("/api/crane-requests")
+@RequestMapping(API_VERSION_PATH + "/contact-forms")
 public class ContactFormController {
 
-    private final ContactFormService contactFormService;
+    //private final ContactFormService contactFormService;
 
     @PostMapping
     public ResponseEntity<ContactFormResponseDto> createContactForm(@RequestBody ContactFormCreateRequestDto owner) {
-        var createdOwner = contactFormService.createContactform(owner);
-        return new ResponseEntity<>(createdOwner, HttpStatus.CREATED);
+        var created = ContactFormResponseDto.builder()
+                .email("test@test.com")
+                .name("Test")
+                .messageResponse("Ok")
+                .build();
+        return new ResponseEntity<>(created, HttpStatus.CREATED);
     }
-    
+
 
 }
