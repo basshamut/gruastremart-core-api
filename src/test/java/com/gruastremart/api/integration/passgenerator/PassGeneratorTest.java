@@ -15,7 +15,7 @@ class PassGeneratorTest {
     @Test
     void getPass() {
         var encoder = new BCryptPasswordEncoder();
-        var password = "miContraseña123";
+        var password = "miPassword123";
         var passwordBase64Encode = Base64.getEncoder().encodeToString(password.getBytes());
         var hashedPassword = encoder.encode(password);
         var hashedAndBase64Encode = Base64.getEncoder().encodeToString(hashedPassword.getBytes());
