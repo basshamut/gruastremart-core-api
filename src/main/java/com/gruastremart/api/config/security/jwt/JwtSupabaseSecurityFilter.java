@@ -1,25 +1,31 @@
 package com.gruastremart.api.config.security.jwt;
 
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.JwtException;
-import io.jsonwebtoken.security.Keys;
+import java.io.IOException;
+import java.security.Key;
+import java.util.List;
+import java.util.stream.Collectors;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.web.filter.GenericFilterBean;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.web.filter.GenericFilterBean;
 
+import com.gruastremart.api.exception.ServiceException;
+import com.gruastremart.api.persistance.repository.UserRepository;
+
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtException;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.security.Keys;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletResponse;
 import jakarta.servlet.http.HttpServletRequest;
-
-import java.io.IOException;
-import java.security.Key;
-import java.util.List;
 
 /**
  * Filtro para verificar un JWT firmado con HS256
@@ -34,11 +40,14 @@ public class JwtSupabaseSecurityFilter extends GenericFilterBean {
 
     private final Key signingKey;
 
-    public JwtSupabaseSecurityFilter(String supabaseJwtSecret) {
+    private final UserRepository userRepository;
+
+    public JwtSupabaseSecurityFilter(String supabaseJwtSecret, UserRepository userRepository) {
         // Convertimos el secreto en una llave HMAC
         this.signingKey = Keys.hmacShaKeyFor(supabaseJwtSecret.getBytes());
+        // Inyectamos el repositorio de usuarios
+        this.userRepository = userRepository;
     }
-
 
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
@@ -51,7 +60,6 @@ public class JwtSupabaseSecurityFilter extends GenericFilterBean {
 
             // 2) Verificamos que el header exista y sea "Bearer <token>"
             if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
-                // Seguimos la cadena sin autenticar
                 chain.doFilter(request, response);
                 return;
             }
@@ -60,44 +68,44 @@ public class JwtSupabaseSecurityFilter extends GenericFilterBean {
             String token = authorizationHeader.substring(7);
 
             // 4) Parsear y verificar firma con JJWT
-            Claims claims = null;
-
-            // Sin verificación del issuer
-            claims = Jwts.parserBuilder()
+            Claims claims = Jwts.parserBuilder()
                     .setSigningKey(signingKey)
                     .build()
                     .parseClaimsJws(token)
                     .getBody();
 
-            // 5) Si llega aquí, significa que la firma es válida
-            // y el token no está expirado ni es inválido.
-            // Creamos una autenticación "sencilla" para Spring Security.
+            // 5) Extraer información relevante del JWT
+            String email = claims.containsKey("email") ? claims.get("email").toString() : "unknown";
 
-            // Suele interesar sacar el "sub" como ident. del usuario
-            String subject = claims.getSubject();
+            // 6) Convertir roles en GrantedAuthority
+            var user = userRepository.findByEmail(email).orElseThrow(() -> new ServiceException("User not found", 404));
+            List<String> roles = List.of(user.getRole());
+            List<SimpleGrantedAuthority> authorities = roles.stream()
+                    .map(role -> new SimpleGrantedAuthority("ROLE_" + role.toUpperCase()))
+                    .collect(Collectors.toList());
 
-            // Podrías extraer más claims (ej. roles) y mapearlos a GrantedAuthorities.
-            // Aquí sólo usamos un rol ficticio "SIMPLE_AUTHORITY".
+            // 7) Crear UserDetails con el email
+            UserDetails userDetails = User.withUsername(email)
+                    .password("") // No hay password porque es un JWT
+                    .authorities(authorities)
+                    .build();
+
+            // 8) Crear la autenticación
             UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                    subject,
-                    null,
-                    List.of(new SimpleGrantedAuthority("SIMPLE_AUTHORITY")));
+                    userDetails, null, authorities);
 
-            // 6) Guardamos la autenticación en el contexto de seguridad.
+            authToken.setDetails(claims); // Guardamos los claims en "details"
+
+            // 9) Guardamos la autenticación en el contexto de seguridad
             SecurityContextHolder.getContext().setAuthentication(authToken);
 
         } catch (JwtException e) {
-            // Cualquier problema con la firma, expiración, etc.
             logger.error("Error al verificar el token JWT de Supabase con JJWT", e);
         } catch (Exception ex) {
-            // Otras excepciones
             logger.error("Excepción en el filtro de seguridad", ex);
         }
 
-        // Continuamos la cadena de filtros
+        // Continuamos la cadena de filtros sin limpiar el contexto de seguridad
         chain.doFilter(request, response);
-
-        // Al terminar, limpiamos el contexto de seguridad
-        SecurityContextHolder.clearContext();
     }
 }

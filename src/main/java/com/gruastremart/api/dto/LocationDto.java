@@ -1,7 +1,5 @@
 package com.gruastremart.api.dto;
 
-import java.util.Date;
-
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -11,10 +9,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder(toBuilder = true)
-public class CraneDemandResponseDto {
-    private String id;
-    private String description;
-    private String userId;
-    private Date dueDate;
-    private String state;
+public class LocationDto {
+    private Double latitude;
+    private Double longitude;
+    private Double accuracy; // Puede ser null si es destino
 }

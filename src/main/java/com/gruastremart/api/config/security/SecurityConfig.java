@@ -1,8 +1,8 @@
 package com.gruastremart.api.config.security;
 
 import static com.gruastremart.api.utils.Constants.LOGIN_URL;
-import static com.gruastremart.api.utils.Constants.SEND_EMAIL_URL;
 import static com.gruastremart.api.utils.Constants.SEND_CONTACTFORM_URL;
+import static com.gruastremart.api.utils.Constants.SEND_EMAIL_URL;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -18,6 +18,7 @@ import org.springframework.web.servlet.handler.HandlerMappingIntrospector;
 
 import com.gruastremart.api.config.security.jwt.JwtSupabaseSecurityFilter;
 import com.gruastremart.api.exception.MvcRequestMatcherConfigurationException;
+import com.gruastremart.api.persistance.repository.UserRepository;
 
 @Configuration
 @EnableWebSecurity
@@ -26,6 +27,9 @@ public class SecurityConfig {
 
     @Autowired
     private SecurityProperties securityProperties;
+
+    @Autowired
+    private UserRepository userRepository;
 
     private final String[] WHITE_LIST = {
             "/swagger*/**",
@@ -54,9 +58,9 @@ public class SecurityConfig {
                 })
                 .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .addFilterBefore(
-                        new JwtSupabaseSecurityFilter(securityProperties.getSupabaseSecret()),
+                        new JwtSupabaseSecurityFilter(securityProperties.getSupabaseSecret(), userRepository),
                         org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter.class);
-                        
+
         return http.build();
     }
 }

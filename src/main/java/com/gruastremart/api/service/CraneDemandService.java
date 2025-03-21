@@ -40,18 +40,19 @@ public class CraneDemandService {
         return CraneDemandMapper.MAPPER.mapToDto(craneDemand.get());
     }
 
-    public CraneDemandResponseDto createCraneDemand(CraneDemandCreateRequestDto craneDemandCreateRequestDto) {
-        var user = userRepository.findById(craneDemandCreateRequestDto.getUserId());
+    public CraneDemandResponseDto createCraneDemand(CraneDemandCreateRequestDto craneDemandCreateRequestDto, String email) {
+        var user = userRepository.findByEmail(email);
         if (user.isEmpty()) {
             throw new ServiceException("User not found", 404);
         }
-        var craneDemandBuilded = buildCraneDemandEntityForSave(craneDemandCreateRequestDto);
+        var craneDemandBuilded = buildCraneDemandEntityForSave(craneDemandCreateRequestDto, user.get().getId());
         var craneDemandSaved = craneDemandRepository.save(craneDemandBuilded);
         return CraneDemandMapper.MAPPER.mapToDto(craneDemandSaved);
     }
 
-    private CraneDemand buildCraneDemandEntityForSave(CraneDemandCreateRequestDto craneDemandCreateRequestDto) {
+    private CraneDemand buildCraneDemandEntityForSave(CraneDemandCreateRequestDto craneDemandCreateRequestDto, String userId) {
         var craneDemandMapped = CraneDemandMapper.MAPPER.mapToEntity(craneDemandCreateRequestDto);
+        craneDemandMapped.setUserId(userId);
         craneDemandMapped.setState("ACTIVE");
         craneDemandMapped.setDueDate(new Date());
         return craneDemandMapped;
