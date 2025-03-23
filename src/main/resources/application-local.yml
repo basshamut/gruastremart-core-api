@@ -34,4 +34,4 @@ app:
 mailer:
   from: "job.jesus.1702@gmail.com"
   to: "tremartca@gmail.com"
-  subject: "Nuevo mensaje de contacto (Prueba Jesus)"
+  subject: "Nuevo mensaje de contacto (Prueba / Local)"
