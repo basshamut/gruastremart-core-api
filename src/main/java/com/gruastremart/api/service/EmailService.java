@@ -1,5 +1,6 @@
 package com.gruastremart.api.service;
 
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -13,6 +14,7 @@ import jakarta.mail.internet.MimeMessage;
 
 
 @Service
+@RequiredArgsConstructor
 public class EmailService {
 
     private static final Logger logger = LoggerFactory.getLogger(EmailService.class);
@@ -28,17 +30,12 @@ public class EmailService {
     @Value("${mailer.subject}")
     private String subject;
 
-    public EmailService(JavaMailSender sender) {
-        this.sender = sender;
-    }
-
     /**
      * Envía un correo de contacto con los datos proporcionados en EmailRequestDto.
      *
      * @param emailRequest DTO que contiene name, email, phone y message
-     * @return true si el envío fue exitoso, false en caso de error
      */
-    public boolean sendContactEmail(final EmailRequestDto emailRequest) {
+    public void sendContactEmail(final EmailRequestDto emailRequest) {
         logger.info("Iniciando envío de correo de contacto...");
 
         boolean send = false;
@@ -63,7 +60,6 @@ public class EmailService {
 
             // Enviamos
             sender.send(message);
-            send = true;
             logger.info("¡Correo enviado correctamente!");
 
         } catch (Exception e) {
@@ -71,6 +67,5 @@ public class EmailService {
         }
 
         logger.info("Finalizando proceso de envío de correo.");
-        return send;
     }
 }
