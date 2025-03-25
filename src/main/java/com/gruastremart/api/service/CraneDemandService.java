@@ -3,18 +3,25 @@ package com.gruastremart.api.service;
 import com.gruastremart.api.dto.CraneDemandCreateRequestDto;
 import com.gruastremart.api.dto.CraneDemandResponseDto;
 import com.gruastremart.api.dto.CraneDemandUpdateRequestDto;
+import com.gruastremart.api.dto.UserDto;
 import com.gruastremart.api.exception.ServiceException;
 import com.gruastremart.api.persistance.entity.CraneDemand;
 import com.gruastremart.api.persistance.repository.CraneDemandRepository;
 import com.gruastremart.api.persistance.repository.UserRepository;
+import com.gruastremart.api.persistance.repository.custom.CraneDemandCustomRepository;
 import com.gruastremart.api.service.mapper.CraneDemandMapper;
+import com.gruastremart.api.service.mapper.UserMapper;
+import com.gruastremart.api.utils.tools.PaginationUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.util.MultiValueMap;
 
 import java.util.Date;
+import java.util.Objects;
 import java.util.Optional;
 
 @Service
@@ -22,12 +29,21 @@ import java.util.Optional;
 public class CraneDemandService {
 
     private final CraneDemandRepository craneDemandRepository;
+    private final CraneDemandCustomRepository craneDemandCustomRepository;
     private final UserRepository userRepository;
 
-    public Page<CraneDemandResponseDto> findWithFilters(Pageable pageable) {
-        var list = craneDemandRepository.findAll(pageable).map(CraneDemandMapper.MAPPER::mapToDto);
-        var countConstruction = craneDemandRepository.count();
-        return new PageImpl<>(list.getContent(), pageable, countConstruction);
+    public Page<CraneDemandResponseDto> findWithFilters(MultiValueMap<String, String> params) {
+        if (!PaginationUtil.isValidPagination(params.getFirst("page"), params.getFirst("size"))) {
+            throw new ServiceException("Invalid pagination parameters", HttpStatus.BAD_REQUEST.value());
+        }
+
+        var pageable = Pageable
+                .ofSize(Integer.parseInt(Objects.requireNonNull(params.getFirst("size"))))
+                .withPage(Integer.parseInt(Objects.requireNonNull(params.getFirst("page"))));
+
+        var list = craneDemandCustomRepository.getWithFilters(params);
+
+        return new PageImpl<>(list.getContent().stream().map(CraneDemandMapper.MAPPER::mapToDto).toList(), pageable, list.getTotalElements());
     }
 
     public CraneDemandResponseDto getCraneDemandById(String craneDemandId) {
