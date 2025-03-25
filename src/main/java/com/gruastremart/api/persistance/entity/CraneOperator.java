@@ -1,6 +1,5 @@
 package com.gruastremart.api.persistance.entity;
 
-import com.gruastremart.api.utils.enums.Role;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -8,12 +7,12 @@ import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-@Document(collection = "users")
+@Document(collection = "operators")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class User {
+public class CraneOperator {
     @Id
     private String id;
     private String name;
@@ -23,5 +22,5 @@ public class User {
     private String address;
     private String identificationNumber;
     private String birthDate;
-    private Role role;
+    private Boolean active;
 }

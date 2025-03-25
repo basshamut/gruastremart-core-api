@@ -1,6 +1,6 @@
 package com.gruastremart.api.controller;
 
-import static com.gruastremart.api.utils.Constants.API_VERSION_PATH;
+import static com.gruastremart.api.utils.constants.Constants.API_VERSION_PATH;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -22,8 +22,8 @@ import com.gruastremart.api.dto.CraneDemandUpdateRequestDto;
 import com.gruastremart.api.dto.RequestMetadataDto;
 import com.gruastremart.api.exception.ServiceException;
 import com.gruastremart.api.service.CraneDemandService;
-import com.gruastremart.api.utils.RequestMetadataExtractorHelper;
-import com.gruastremart.api.utils.Tools;
+import com.gruastremart.api.utils.tools.RequestMetadataExtractorUtil;
+import com.gruastremart.api.utils.tools.PaginationUtil;
 
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -38,7 +38,7 @@ public class CraneDemandController {
     @GetMapping
     public ResponseEntity<Page<CraneDemandResponseDto>> findWithFilters(@RequestParam int page,
             @RequestParam int size) {
-        if (!Tools.isValidPagination(page, size)) {
+        if (!PaginationUtil.isValidPagination(page, size)) {
             throw new ServiceException("Invalid pagination parameters", HttpStatus.BAD_REQUEST.value());
         }
 
@@ -61,7 +61,7 @@ public class CraneDemandController {
     public ResponseEntity<CraneDemandResponseDto> createCraneDemand(
             @RequestBody CraneDemandCreateRequestDto craneDemandRequest, HttpServletRequest request) {
 
-        RequestMetadataDto meta = RequestMetadataExtractorHelper.extract(request);
+        RequestMetadataDto meta = RequestMetadataExtractorUtil.extract(request);
 
         System.out.printf(
                 "AUDITORÍA - Fecha: %s, Usuario: %s, Rol: %s, Email: %s, IP: %s, User-Agent: %s, Ubicación actual: %s, Destino: %s\n",

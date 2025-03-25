@@ -10,7 +10,7 @@ import org.springframework.context.annotation.Primary;
 
 import java.util.concurrent.TimeUnit;
 
-import static com.gruastremart.api.utils.Constants.LOGIN_ATTEMPTS_CACHE;
+import static com.gruastremart.api.utils.constants.Constants.LOGIN_ATTEMPTS_CACHE;
 
 @Configuration
 @EnableCaching

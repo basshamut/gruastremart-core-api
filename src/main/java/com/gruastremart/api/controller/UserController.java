@@ -1,11 +1,15 @@
 package com.gruastremart.api.controller;
 
-import static com.gruastremart.api.utils.Constants.API_VERSION_PATH;
+import static com.gruastremart.api.utils.constants.Constants.API_VERSION_PATH;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -27,4 +31,17 @@ public class UserController {
         var user = userService.findUserByEmail(userEmail);
         return ResponseEntity.ok().body(user);
     }
+
+    @PostMapping
+    public ResponseEntity<UserDto> register(@RequestBody UserDto userDto) {
+        var response = userService.register(userDto);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @PatchMapping("{id}")
+    public ResponseEntity<UserDto> update(@PathVariable String id, @RequestBody UserDto userDto) {
+        var response = userService.update(id, userDto);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
 }

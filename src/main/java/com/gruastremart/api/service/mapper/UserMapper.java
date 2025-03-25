@@ -7,14 +7,13 @@ import org.mapstruct.factory.Mappers;
 import com.gruastremart.api.dto.UserDto;
 import com.gruastremart.api.persistance.entity.User;
 
-@Mapper(componentModel = "spring", imports = {User.class, UserDto.class})
+@Mapper(componentModel = "spring")
 public interface UserMapper {
     UserMapper MAPPER = Mappers.getMapper(UserMapper.class);
 
-    @Mapping(target = "id", ignore = true)
-    @Mapping(target = "password", ignore = true)
     UserDto mapToDto(User entity);
 
+    @Mapping(target = "id", ignore = true)
     User mapToEntity(UserDto dto);
     
 }

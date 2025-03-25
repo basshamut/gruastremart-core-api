@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import static com.gruastremart.api.utils.Constants.API_VERSION_PATH;
+import static com.gruastremart.api.utils.constants.Constants.API_VERSION_PATH;
 
 @RestController
 @RequestMapping(API_VERSION_PATH + "/contact-forms")
