@@ -1,4 +1,4 @@
-package com.gruastremart.api.utils;
+package com.gruastremart.api.utils.constants;
 
 public class Constants {
     // Version

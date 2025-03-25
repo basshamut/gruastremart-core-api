@@ -79,7 +79,7 @@ public class JwtSupabaseSecurityFilter extends GenericFilterBean {
 
             // 6) Convertir roles en GrantedAuthority
             var user = userRepository.findByEmail(email).orElseThrow(() -> new ServiceException("User not found", 404));
-            List<String> roles = List.of(user.getRole());
+            List<String> roles = List.of(user.getRole().getValue());
             List<SimpleGrantedAuthority> authorities = roles.stream()
                     .map(role -> new SimpleGrantedAuthority("ROLE_" + role.toUpperCase()))
                     .collect(Collectors.toList());

@@ -1,4 +1,4 @@
-package com.gruastremart.api.utils;
+package com.gruastremart.api.utils.tools;
 
 import com.gruastremart.api.dto.RequestMetadataDto;
 import jakarta.servlet.http.HttpServletRequest;
@@ -10,9 +10,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
-public class RequestMetadataExtractorHelper {
+public class RequestMetadataExtractorUtil {
 
-    private RequestMetadataExtractorHelper() {
+    private RequestMetadataExtractorUtil() {
         throw new IllegalStateException("Utility class");
     }
 

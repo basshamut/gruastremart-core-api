@@ -1,8 +1,8 @@
 package com.gruastremart.api.config.security;
 
-import static com.gruastremart.api.utils.Constants.LOGIN_URL;
-import static com.gruastremart.api.utils.Constants.SEND_CONTACTFORM_URL;
-import static com.gruastremart.api.utils.Constants.SEND_EMAIL_URL;
+import static com.gruastremart.api.utils.constants.Constants.LOGIN_URL;
+import static com.gruastremart.api.utils.constants.Constants.SEND_CONTACTFORM_URL;
+import static com.gruastremart.api.utils.constants.Constants.SEND_EMAIL_URL;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
