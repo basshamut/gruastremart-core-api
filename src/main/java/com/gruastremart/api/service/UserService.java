@@ -37,7 +37,7 @@ public class UserService {
         var user = userRepository.findByEmail(userDto.getEmail());
 
         if (user.isPresent()) {
-            throw new ServiceException("Operator already exists", 400);
+            throw new ServiceException("User already exists", 400);
         }
 
         var operator = UserMapper.MAPPER.mapToEntity(userDto);

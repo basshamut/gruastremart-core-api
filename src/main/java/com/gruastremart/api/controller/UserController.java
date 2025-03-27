@@ -60,7 +60,7 @@ public class UserController {
         return new ResponseEntity<>(users, HttpStatus.OK);
     }
 
-    @PostMapping
+    @PostMapping("/register")
     public ResponseEntity<UserDto> register(@RequestBody UserDto userDto) {
         var response = userService.register(userDto);
         return new ResponseEntity<>(response, HttpStatus.OK);
