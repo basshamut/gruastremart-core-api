@@ -1,9 +1,8 @@
 package com.gruastremart.api.config.security;
 
-import static com.gruastremart.api.utils.constants.Constants.LOGIN_URL;
-import static com.gruastremart.api.utils.constants.Constants.SEND_CONTACTFORM_URL;
-import static com.gruastremart.api.utils.constants.Constants.SEND_EMAIL_URL;
-
+import com.gruastremart.api.config.security.jwt.JwtSupabaseSecurityFilter;
+import com.gruastremart.api.exception.MvcRequestMatcherConfigurationException;
+import com.gruastremart.api.persistance.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -16,9 +15,10 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.servlet.util.matcher.MvcRequestMatcher;
 import org.springframework.web.servlet.handler.HandlerMappingIntrospector;
 
-import com.gruastremart.api.config.security.jwt.JwtSupabaseSecurityFilter;
-import com.gruastremart.api.exception.MvcRequestMatcherConfigurationException;
-import com.gruastremart.api.persistance.repository.UserRepository;
+import static com.gruastremart.api.utils.constants.Constants.LOGIN_URL;
+import static com.gruastremart.api.utils.constants.Constants.REGISTER_FORM_URL;
+import static com.gruastremart.api.utils.constants.Constants.SEND_CONTACTFORM_URL;
+import static com.gruastremart.api.utils.constants.Constants.SEND_EMAIL_URL;
 
 @Configuration
 @EnableWebSecurity
@@ -38,7 +38,8 @@ public class SecurityConfig {
             "/error",
             LOGIN_URL,
             SEND_EMAIL_URL,
-            SEND_CONTACTFORM_URL
+            SEND_CONTACTFORM_URL,
+            REGISTER_FORM_URL
     };
 
     @Bean
@@ -51,8 +52,7 @@ public class SecurityConfig {
                             auth.requestMatchers(new MvcRequestMatcher(introspector, pattern)).permitAll();
                         }
                     } catch (Exception e) {
-                        throw new MvcRequestMatcherConfigurationException("Failed to configure MVC request matchers",
-                                e);
+                        throw new MvcRequestMatcherConfigurationException("Failed MVC settings request matchers", e);
                     }
                     auth.anyRequest().authenticated();
                 })
