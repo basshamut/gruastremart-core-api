@@ -14,10 +14,6 @@ public class Constants {
     // Cache
     public static final String LOGIN_ATTEMPTS_CACHE = "loginAttempts";
 
-    // JWT
-    public static final String HEADER_AUTHORIZACION_KEY = "Authorization";
-    public static final String TOKEN_BEARER_PREFIX = "Bearer ";
-
     // Email
     public static final String SEND_EMAIL_URL = API_VERSION_PATH + "/emails/contact";
     public static final String SEND_CONTACTFORM_URL = API_VERSION_PATH + "/contact-forms";
