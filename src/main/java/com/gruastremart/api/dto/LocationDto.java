@@ -13,4 +13,5 @@ public class LocationDto {
     private Double latitude;
     private Double longitude;
     private Double accuracy; // Puede ser null si es destino
+    private String name;
 }

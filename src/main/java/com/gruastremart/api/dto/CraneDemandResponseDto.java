@@ -2,6 +2,7 @@ package com.gruastremart.api.dto;
 
 import java.util.Date;
 
+import com.gruastremart.api.persistance.entity.Location;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -14,7 +15,14 @@ import lombok.NoArgsConstructor;
 public class CraneDemandResponseDto {
     private String id;
     private String description;
-    private String userId;
     private Date dueDate;
     private String state;
+    private String userId;
+    private String origin;
+    private String carType;
+    private String breakdown;
+    private String referenceSource;
+    private String recommendedBy;
+    private LocationDto currentLocation;
+    private LocationDto destinationLocation;
 }
