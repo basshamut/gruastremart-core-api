@@ -17,6 +17,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.util.MultiValueMap;
 
@@ -31,6 +32,8 @@ public class CraneDemandService {
     private final CraneDemandRepository craneDemandRepository;
     private final CraneDemandCustomRepository craneDemandCustomRepository;
     private final UserRepository userRepository;
+
+    private final SimpMessagingTemplate messagingTemplate;
 
     public Page<CraneDemandResponseDto> findWithFilters(MultiValueMap<String, String> params) {
         if (!PaginationUtil.isValidPagination(params.getFirst("page"), params.getFirst("size"))) {
@@ -63,7 +66,11 @@ public class CraneDemandService {
         }
         var craneDemandBuilded = buildCraneDemandEntityForSave(craneDemandCreateRequestDto, user.get().getId());
         var craneDemandSaved = craneDemandRepository.save(craneDemandBuilded);
-        return CraneDemandMapper.MAPPER.mapToDto(craneDemandSaved);
+        var craneDemandSavedDto = CraneDemandMapper.MAPPER.mapToDto(craneDemandSaved);
+
+        messagingTemplate.convertAndSend("/topic/new-demand", craneDemandSavedDto);
+        
+        return craneDemandSavedDto;
     }
 
     private CraneDemand buildCraneDemandEntityForSave(CraneDemandCreateRequestDto craneDemandCreateRequestDto, String userId) {
