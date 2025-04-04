@@ -15,6 +15,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -31,6 +32,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import static com.gruastremart.api.utils.constants.Constants.API_VERSION_PATH;
 
+@Slf4j
 @RestController
 @RequestMapping(value = API_VERSION_PATH + "/crane-demands")
 @RequiredArgsConstructor
@@ -49,6 +51,10 @@ public class CraneDemandController {
     @Parameters({
             @Parameter(name = "page", description = "Número de página", required = true),
             @Parameter(name = "size", description = "Tamaño de la página", required = true),
+            @Parameter(name = "lat", description = "Latitud"),
+            @Parameter(name = "lng", description = "Longitud"),
+            @Parameter(name = "radio", description = "Radio de búsqueda"),
+
     })
     public ResponseEntity<Page<CraneDemandResponseDto>> findWithFilters(@Parameter(description = "Query parameters for filtering crane demands") @RequestParam(required = false) MultiValueMap<String, String> params) {
         var users = craneDemandService.findWithFilters(params);
@@ -71,8 +77,7 @@ public class CraneDemandController {
 
         RequestMetadataDto meta = RequestMetadataExtractorUtil.extract(request);
 
-        System.out.printf(
-                "AUDITORÍA - Fecha: %s, Usuario: %s, Rol: %s, Email: %s, IP: %s, User-Agent: %s, Ubicación actual: %s, Destino: %s\n",
+        log.info("AUDITORÍA - Fecha: {}, Usuario: {}, Rol: {}, Email: {}, IP: {}, User-Agent: {}, Ubicación actual: {}, Destino: {}",
                 meta.getTimestamp(), meta.getUserId(), meta.getRole(), meta.getEmail(),
                 meta.getIp(), meta.getUserAgent(),
                 craneDemandRequest.getCurrentLocation(), craneDemandRequest.getDestinationLocation());

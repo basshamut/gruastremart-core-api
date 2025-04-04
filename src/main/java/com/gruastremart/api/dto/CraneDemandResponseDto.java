@@ -2,7 +2,6 @@ package com.gruastremart.api.dto;
 
 import java.util.Date;
 
-import com.gruastremart.api.persistance.entity.Location;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

@@ -1,14 +1,15 @@
 package com.gruastremart.api.persistance.entity;
 
-import java.util.Date;
-
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.Document;
-
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
+import org.springframework.data.mongodb.core.index.GeoSpatialIndexed;
+import org.springframework.data.mongodb.core.mapping.Document;
+
+import java.util.Date;
 
 @Document(collection = "crane_demands")
 @Data
@@ -27,6 +28,13 @@ public class CraneDemand {
     private String breakdown;
     private String referenceSource;
     private String recommendedBy;
-    private Location currentLocation;
-    private Location destinationLocation;
+    @GeoSpatialIndexed
+    private GeoJsonPoint currentLocation;
+    private String currentLocationName;
+    private Double currentLocationAccuracy;
+
+    @GeoSpatialIndexed
+    private GeoJsonPoint destinationLocation;
+    private String destinationLocationName;
+    private Double destinationLocationAccuracy;
 }

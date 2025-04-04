@@ -1,9 +1,8 @@
 package com.gruastremart.api.config.security;
 
-import com.gruastremart.api.config.security.jwt.JwtSupabaseSecurityFilter;
+import com.gruastremart.api.config.security.jwt.JwtSecurityFilter;
+import com.gruastremart.api.config.security.jwt.JwtTokenProvider;
 import com.gruastremart.api.exception.MvcRequestMatcherConfigurationException;
-import com.gruastremart.api.persistance.repository.UserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -13,6 +12,7 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.servlet.util.matcher.MvcRequestMatcher;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.web.servlet.handler.HandlerMappingIntrospector;
 
 import static com.gruastremart.api.utils.constants.Constants.LOGIN_URL;
@@ -25,13 +25,13 @@ import static com.gruastremart.api.utils.constants.Constants.SEND_EMAIL_URL;
 @EnableMethodSecurity
 public class SecurityConfig {
 
-    @Autowired
-    private SecurityProperties securityProperties;
+    private final JwtTokenProvider jwtTokenProvider;
 
-    @Autowired
-    private UserRepository userRepository;
+    public SecurityConfig(JwtTokenProvider jwtTokenProvider) {
+        this.jwtTokenProvider = jwtTokenProvider;
+    }
 
-    private final String[] WHITE_LIST = {
+    private static final String[] MVC_WHITE_LIST = {
             "/swagger*/**",
             "/v3/api-docs/**",
             "/console/**",
@@ -42,24 +42,37 @@ public class SecurityConfig {
             REGISTER_FORM_URL
     };
 
+    private static final String[] NON_MVC_WHITE_LIST = {
+            "/ws/**" // WebSocket SockJS endpoint
+    };
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http, HandlerMappingIntrospector introspector)
             throws Exception {
+
         http.csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> {
                     try {
-                        for (String pattern : WHITE_LIST) {
+                        // Permitir rutas MVC con MvcRequestMatcher (RestControllers)
+                        for (String pattern : MVC_WHITE_LIST) {
                             auth.requestMatchers(new MvcRequestMatcher(introspector, pattern)).permitAll();
                         }
+
+                        // Permitir rutas no MVC con AntPathRequestMatcher (WebSocket)
+                        for (String pattern : NON_MVC_WHITE_LIST) {
+                            auth.requestMatchers(new AntPathRequestMatcher(pattern)).permitAll();
+                        }
                     } catch (Exception e) {
-                        throw new MvcRequestMatcherConfigurationException("Failed MVC settings request matchers", e);
+                        throw new MvcRequestMatcherConfigurationException("Failed MVC request matchers", e);
                     }
+
                     auth.anyRequest().authenticated();
                 })
                 .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .addFilterBefore(
-                        new JwtSupabaseSecurityFilter(securityProperties.getSupabaseSecret(), userRepository),
-                        org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter.class);
+                        new JwtSecurityFilter(jwtTokenProvider),
+                        org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter.class
+                );
 
         return http.build();
     }
