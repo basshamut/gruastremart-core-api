@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.Metrics;
 import org.springframework.data.geo.Point;
@@ -43,6 +44,7 @@ public class CraneDemandCustomRepository {
                     .maxDistance(distancia.getNormalizedValue()));
         }
 
+        query.with(Sort.by(Sort.Direction.DESC, "dueDate"));
         query.with(pageable);
 
         var demands = mongoTemplate.find(query, CraneDemand.class);
