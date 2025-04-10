@@ -23,16 +23,6 @@ public class UserService {
     private final UserRepository userRepository;
     private final UserCustomRepository userCustomRepository;
 
-    public UserDto findUserByEmail(String userId) {
-        var user = userRepository.findByEmail(userId).orElseThrow(() -> new ServiceException("User not found", 404));
-        return UserMapper.MAPPER.mapToDto(user);
-    }
-
-    public UserDto findUserBySupabaseId(String supabaseId) {
-        var user = userRepository.findBySupabaseId(supabaseId).orElseThrow(() -> new ServiceException("User not found", 404));
-        return UserMapper.MAPPER.mapToDto(user);
-    }
-
     public UserDto register(UserDto userDto) {
         var user = userRepository.findByEmail(userDto.getEmail());
 
@@ -63,7 +53,7 @@ public class UserService {
     }
 
     public Page<UserDto> findWithFilters(MultiValueMap<String, String> params) {
-        if (!PaginationUtil.isValidPagination(params.getFirst("page"), params.getFirst("size"))) {
+        if (PaginationUtil.isValidPagination(params.getFirst("page"), params.getFirst("size"))) {
             throw new ServiceException("Invalid pagination parameters", HttpStatus.BAD_REQUEST.value());
         }
 

@@ -3,14 +3,12 @@ package com.gruastremart.api.service;
 import com.gruastremart.api.dto.CraneDemandCreateRequestDto;
 import com.gruastremart.api.dto.CraneDemandResponseDto;
 import com.gruastremart.api.dto.CraneDemandUpdateRequestDto;
-import com.gruastremart.api.dto.UserDto;
 import com.gruastremart.api.exception.ServiceException;
 import com.gruastremart.api.persistance.entity.CraneDemand;
 import com.gruastremart.api.persistance.repository.CraneDemandRepository;
 import com.gruastremart.api.persistance.repository.UserRepository;
 import com.gruastremart.api.persistance.repository.custom.CraneDemandCustomRepository;
 import com.gruastremart.api.service.mapper.CraneDemandMapper;
-import com.gruastremart.api.service.mapper.UserMapper;
 import com.gruastremart.api.utils.tools.PaginationUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -36,7 +34,7 @@ public class CraneDemandService {
     private final SimpMessagingTemplate messagingTemplate;
 
     public Page<CraneDemandResponseDto> findWithFilters(MultiValueMap<String, String> params) {
-        if (!PaginationUtil.isValidPagination(params.getFirst("page"), params.getFirst("size"))) {
+        if (PaginationUtil.isValidPagination(params.getFirst("page"), params.getFirst("size"))) {
             throw new ServiceException("Invalid pagination parameters", HttpStatus.BAD_REQUEST.value());
         }
 
@@ -89,9 +87,9 @@ public class CraneDemandService {
 
         return user.map(craneDemand -> {
             craneDemand.setDescription(CraneDemand.getDescription());
-            craneDemand.setState(CraneDemand.getState());
-            CraneDemand updatedOwner = craneDemandRepository.save(craneDemand);
-            return CraneDemandMapper.MAPPER.mapToDto(updatedOwner);
+            craneDemand.setState(CraneDemand.getState().name());
+            CraneDemand updated = craneDemandRepository.save(craneDemand);
+            return CraneDemandMapper.MAPPER.mapToDto(updated);
         });
     }
 

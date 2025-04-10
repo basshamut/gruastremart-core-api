@@ -63,12 +63,8 @@ public class CraneDemandController {
 
     @GetMapping("/{id}")
     public ResponseEntity<CraneDemandResponseDto> findById(@PathVariable String id) {
-        try {
-            var owner = craneDemandService.getCraneDemandById(id);
-            return new ResponseEntity<>(owner, HttpStatus.OK);
-        } catch (RuntimeException e) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
+        var demand = craneDemandService.getCraneDemandById(id);
+        return new ResponseEntity<>(demand, HttpStatus.OK);
     }
 
     @PostMapping
@@ -77,20 +73,15 @@ public class CraneDemandController {
 
         RequestMetadataDto meta = RequestMetadataExtractorUtil.extract(request);
 
-        log.info("AUDITORÍA - Fecha: {}, Usuario: {}, Rol: {}, Email: {}, IP: {}, User-Agent: {}, Ubicación actual: {}, Destino: {}",
-                meta.getTimestamp(), meta.getUserId(), meta.getRole(), meta.getEmail(),
-                meta.getIp(), meta.getUserAgent(),
-                craneDemandRequest.getCurrentLocation(), craneDemandRequest.getDestinationLocation());
-
-        var createdOwner = craneDemandService.createCraneDemand(craneDemandRequest, meta.getEmail());
-        return new ResponseEntity<>(createdOwner, HttpStatus.CREATED);
+        var created = craneDemandService.createCraneDemand(craneDemandRequest, meta.getEmail());
+        return new ResponseEntity<>(created, HttpStatus.CREATED);
     }
 
     @PutMapping("/{craneDemandId}")
     public ResponseEntity<CraneDemandResponseDto> updateCraneDemand(@PathVariable String craneDemandId,
                                                                     @RequestBody CraneDemandUpdateRequestDto CraneDemand) {
-        var updatedOwner = craneDemandService.updateCraneDemand(craneDemandId, CraneDemand);
-        return updatedOwner.map(value -> new ResponseEntity<>(value, HttpStatus.OK))
+        var updated = craneDemandService.updateCraneDemand(craneDemandId, CraneDemand);
+        return updated.map(value -> new ResponseEntity<>(value, HttpStatus.OK))
                 .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 
