@@ -1,7 +1,7 @@
 package com.gruastremart.api.config.aop;
 
 import com.gruastremart.api.dto.CraneDemandCreateRequestDto;
-import com.gruastremart.api.dto.CraneDemandUpdateRequestDto;
+import com.gruastremart.api.dto.CraneDemandAssignRequestDto;
 import com.gruastremart.api.dto.RequestMetadataDto;
 import com.gruastremart.api.utils.tools.RequestMetadataExtractorUtil;
 import jakarta.servlet.http.HttpServletRequest;
@@ -42,7 +42,7 @@ public class AopLogger {
     public void logUpdateCraneDemandAuditInfo(org.aspectj.lang.JoinPoint joinPoint) {
         HttpServletRequest request = (HttpServletRequest) joinPoint.getArgs()[1];
         RequestMetadataDto meta = RequestMetadataExtractorUtil.extract(request);
-        CraneDemandUpdateRequestDto craneDemandRequest = (CraneDemandUpdateRequestDto) joinPoint.getArgs()[1];
+        CraneDemandAssignRequestDto craneDemandRequest = (CraneDemandAssignRequestDto) joinPoint.getArgs()[1];
         logAuditInfo(meta, "N/A", "N/A");
     }
 }

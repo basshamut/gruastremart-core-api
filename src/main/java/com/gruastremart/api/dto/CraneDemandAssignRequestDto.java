@@ -8,9 +8,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class CraneDemandUpdateRequestDto {
-    private String userId;
-    private String description;
-    private CraneDemandStateEnum state;
+public class CraneDemandAssignRequestDto {
+    private String operatorId;
 }
 

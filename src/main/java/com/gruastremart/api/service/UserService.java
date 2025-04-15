@@ -4,7 +4,7 @@ import com.gruastremart.api.dto.UserDto;
 import com.gruastremart.api.exception.ServiceException;
 import com.gruastremart.api.persistance.repository.UserRepository;
 import com.gruastremart.api.persistance.repository.custom.UserCustomRepository;
-import com.gruastremart.api.service.mapper.UserMapper;
+import com.gruastremart.api.mapper.UserMapper;
 import com.gruastremart.api.utils.tools.PaginationUtil;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;

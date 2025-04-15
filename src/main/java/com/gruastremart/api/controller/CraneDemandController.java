@@ -3,7 +3,6 @@ package com.gruastremart.api.controller;
 import com.gruastremart.api.controller.handler.json.HttpErrorInfoJson;
 import com.gruastremart.api.dto.CraneDemandCreateRequestDto;
 import com.gruastremart.api.dto.CraneDemandResponseDto;
-import com.gruastremart.api.dto.CraneDemandUpdateRequestDto;
 import com.gruastremart.api.dto.RequestMetadataDto;
 import com.gruastremart.api.service.CraneDemandService;
 import com.gruastremart.api.utils.tools.RequestMetadataExtractorUtil;
@@ -22,9 +21,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -54,7 +53,11 @@ public class CraneDemandController {
             @Parameter(name = "lat", description = "Latitud"),
             @Parameter(name = "lng", description = "Longitud"),
             @Parameter(name = "radio", description = "Radio de búsqueda"),
-
+            @Parameter(
+                    name = "state",
+                    description = "Filtrar por estado de la demanda",
+                    schema = @Schema(allowableValues = {"ACTIVE", "INACTIVE", "TAKEN", "COMPLETED"})
+            )
     })
     public ResponseEntity<Page<CraneDemandResponseDto>> findWithFilters(@Parameter(description = "Query parameters for filtering crane demands") @RequestParam(required = false) MultiValueMap<String, String> params) {
         var users = craneDemandService.findWithFilters(params);
@@ -77,10 +80,10 @@ public class CraneDemandController {
         return new ResponseEntity<>(created, HttpStatus.CREATED);
     }
 
-    @PutMapping("/{craneDemandId}")
-    public ResponseEntity<CraneDemandResponseDto> updateCraneDemand(@PathVariable String craneDemandId,
-                                                                    @RequestBody CraneDemandUpdateRequestDto CraneDemand) {
-        var updated = craneDemandService.updateCraneDemand(craneDemandId, CraneDemand);
+    @PatchMapping("/{craneDemandId}")
+    public ResponseEntity<CraneDemandResponseDto> assignCraneDemand(@PathVariable String craneDemandId, HttpServletRequest request) {
+        RequestMetadataDto meta = RequestMetadataExtractorUtil.extract(request);
+        var updated = craneDemandService.assignCraneDemand(craneDemandId, meta.getUserId());
         return updated.map(value -> new ResponseEntity<>(value, HttpStatus.OK))
                 .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }

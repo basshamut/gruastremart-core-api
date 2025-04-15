@@ -1,6 +1,7 @@
 package com.gruastremart.api.persistance.repository.custom;
 
 import com.gruastremart.api.persistance.entity.CraneDemand;
+import com.gruastremart.api.utils.enums.CraneDemandStateEnum;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -30,10 +31,12 @@ public class CraneDemandCustomRepository {
         var lat = params.containsKey("lat") ? Double.parseDouble(Objects.requireNonNull(params.getFirst("lat"))) : 0.0;
         var lng = params.containsKey("lng") ? Double.parseDouble(Objects.requireNonNull(params.getFirst("lng"))) : 0.0;
         var radio = params.containsKey("radio") ? Double.parseDouble(Objects.requireNonNull(params.getFirst("radio"))) : 0.0; // Radio por defecto (ej: 10 km)
-
         var pageable = Pageable.ofSize(size).withPage(page);
 
         var query = new Query();
+        if (params.containsKey("state")) {
+            query.addCriteria(Criteria.where("state").is(CraneDemandStateEnum.valueOf(params.getFirst("state"))));
+        }
 
         if (lat != 0 && lng != 0 && radio != 0) {
             var punto = new Point(lng, lat); // GeoJSON usa (lng, lat)
@@ -44,7 +47,7 @@ public class CraneDemandCustomRepository {
                     .maxDistance(distancia.getNormalizedValue()));
         }
 
-        query.with(Sort.by(Sort.Direction.DESC, "dueDate"));
+        query.with(Sort.by(Sort.Direction.DESC, "createdAt"));
         query.with(pageable);
 
         var demands = mongoTemplate.find(query, CraneDemand.class);

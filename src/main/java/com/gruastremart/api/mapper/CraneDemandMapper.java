@@ -1,4 +1,4 @@
-package com.gruastremart.api.service.mapper;
+package com.gruastremart.api.mapper;
 
 import com.gruastremart.api.dto.CraneDemandCreateRequestDto;
 import com.gruastremart.api.dto.CraneDemandResponseDto;
@@ -25,7 +25,7 @@ public interface CraneDemandMapper {
     @Mapping(target = "destinationLocation", expression = "java(mapToLocation(dto.getDestinationLocation()))")
     CraneDemand mapToEntity(CraneDemandCreateRequestDto dto);
 
-    @Mapping(source = "entity.dueDate", target = "dueDate", dateFormat = "dd/MM/yyyy")
+    @Mapping(source = "entity.createdAt", target = "createdAt", dateFormat = "dd/MM/yyyy")
     @Mapping(target = "currentLocation", expression = "java(mapToLocationDto(entity.getCurrentLocation(), entity.getCurrentLocationName(), entity.getCurrentLocationAccuracy()))")
     @Mapping(target = "destinationLocation", expression = "java(mapToLocationDto(entity.getDestinationLocation(), entity.getDestinationLocationName(), entity.getDestinationLocationAccuracy()))")
     CraneDemandResponseDto mapToDto(CraneDemand entity);

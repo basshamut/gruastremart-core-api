@@ -2,13 +2,15 @@ package com.gruastremart.api.service;
 
 import com.gruastremart.api.dto.CraneDemandCreateRequestDto;
 import com.gruastremart.api.dto.CraneDemandResponseDto;
-import com.gruastremart.api.dto.CraneDemandUpdateRequestDto;
+import com.gruastremart.api.dto.CraneDemandAssignRequestDto;
 import com.gruastremart.api.exception.ServiceException;
+import com.gruastremart.api.mapper.CraneDemandMapper;
 import com.gruastremart.api.persistance.entity.CraneDemand;
 import com.gruastremart.api.persistance.repository.CraneDemandRepository;
+import com.gruastremart.api.persistance.repository.OperatorRepository;
 import com.gruastremart.api.persistance.repository.UserRepository;
 import com.gruastremart.api.persistance.repository.custom.CraneDemandCustomRepository;
-import com.gruastremart.api.service.mapper.CraneDemandMapper;
+import com.gruastremart.api.utils.enums.CraneDemandStateEnum;
 import com.gruastremart.api.utils.tools.PaginationUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -30,6 +32,7 @@ public class CraneDemandService {
     private final CraneDemandRepository craneDemandRepository;
     private final CraneDemandCustomRepository craneDemandCustomRepository;
     private final UserRepository userRepository;
+    private final OperatorRepository operatorRepository;
 
     private final SimpMessagingTemplate messagingTemplate;
 
@@ -67,27 +70,40 @@ public class CraneDemandService {
         var craneDemandSavedDto = CraneDemandMapper.MAPPER.mapToDto(craneDemandSaved);
 
         messagingTemplate.convertAndSend("/topic/new-demand", craneDemandSavedDto);
-        
+
         return craneDemandSavedDto;
     }
 
     private CraneDemand buildCraneDemandEntityForSave(CraneDemandCreateRequestDto craneDemandCreateRequestDto, String userId) {
         var craneDemandMapped = CraneDemandMapper.MAPPER.mapToEntity(craneDemandCreateRequestDto);
-        craneDemandMapped.setUserId(userId);
+        craneDemandMapped.setCreatedByUserId(userId);
         craneDemandMapped.setState("ACTIVE");
-        craneDemandMapped.setDueDate(new Date());
+        craneDemandMapped.setCreatedAt(new Date());
         return craneDemandMapped;
     }
 
-    public Optional<CraneDemandResponseDto> updateCraneDemand(String craneDemandId, CraneDemandUpdateRequestDto CraneDemand) {
-        var user = craneDemandRepository.findById(craneDemandId);
-        if (user.isEmpty()) {
+    public Optional<CraneDemandResponseDto> assignCraneDemand(String craneDemandId, String userEmail) {
+        var optionalCraneDemand = craneDemandRepository.findById(craneDemandId);
+        if (optionalCraneDemand.isEmpty()) {
             throw new ServiceException("Crane request not found", 404);
         }
 
-        return user.map(craneDemand -> {
-            craneDemand.setDescription(CraneDemand.getDescription());
-            craneDemand.setState(CraneDemand.getState().name());
+        var user = userRepository.findByEmail(userEmail);
+        if (user.isEmpty()) {
+            throw new ServiceException("User not found", 404);
+        }
+
+        var operator = operatorRepository.findByUserId(user.get().getId());
+        if (operator.isEmpty()) {
+            throw new ServiceException("User is not an operator", 404);
+        }
+
+        return optionalCraneDemand.map(craneDemand -> {
+
+            craneDemand.setEditedByUserId(user.get().getId());
+            craneDemand.setAssignedOperatorId(operator.get().getId());
+            craneDemand.setState(CraneDemandStateEnum.TAKEN.name());
+            craneDemand.setUpdatedAt(new Date());
             CraneDemand updated = craneDemandRepository.save(craneDemand);
             return CraneDemandMapper.MAPPER.mapToDto(updated);
         });

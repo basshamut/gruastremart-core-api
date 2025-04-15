@@ -1,5 +1,6 @@
 package com.gruastremart.api.persistance.entity;
 
+import com.gruastremart.api.utils.enums.OperatorVehiculeTypeEnum;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -15,12 +16,6 @@ import org.springframework.data.mongodb.core.mapping.Document;
 public class CraneOperator {
     @Id
     private String id;
-    private String name;
-    private String lastName;
-    private String email;
-    private String phone;
-    private String address;
-    private String identificationNumber;
-    private String birthDate;
-    private Boolean active;
+    private String userId;
+    private OperatorVehiculeTypeEnum operatorVehiculeType;
 }
