@@ -35,15 +35,12 @@ jobs:
           chmod 600 ./private_key
 
       # 📦 Copiar imagen al VPS
-      - name: Copy Docker image tarball to VPS
-        uses: appleboy/scp-action@v0.1.0
-        with:
-          host: ${{ secrets.VPS_SSH_HOST }}
-          username: ${{ secrets.VPS_SSH_USERNAME }}
-          port: 22
-          key_path: ./private_key
-          source: "gruastremart-core-api.tar"
-          target: "/home/${{ secrets.VPS_SSH_USERNAME }}/"
+      - name: Copy Docker image tarball manually using scp
+        run: |
+          scp -i ./private_key -o StrictHostKeyChecking=no \
+            gruastremart-core-api.tar \
+            root@${{ secrets.VPS_SSH_HOST }}:/home/${{ secrets.VPS_SSH_USERNAME }}/
+
 
       # 🚀 Desplegar en el VPS
       - name: Deploy Docker Container via SSH
