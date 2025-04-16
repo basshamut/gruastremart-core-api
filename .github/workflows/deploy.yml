@@ -37,9 +37,12 @@ jobs:
       # 📦 Copiar imagen manualmente al VPS
       - name: Copy Docker image tarball manually using scp
         run: |
+          echo "Intentando conexión como ${{ secrets.VPS_SSH_USERNAME }}"
+          ssh -i ./private_key -vvv -o StrictHostKeyChecking=no ${{ secrets.VPS_SSH_USERNAME }}@${{ secrets.VPS_SSH_HOST }} exit
           scp -i ./private_key -o StrictHostKeyChecking=no \
             gruastremart-core-api.tar \
             ${{ secrets.VPS_SSH_USERNAME }}@${{ secrets.VPS_SSH_HOST }}:/home/${{ secrets.VPS_SSH_USERNAME }}/
+
 
       # 🚀 Desplegar en el VPS manualmente
       - name: Deploy Docker container manually
