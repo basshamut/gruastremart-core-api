@@ -29,10 +29,13 @@ jobs:
         run: docker save gruastremart-core-api:latest > gruastremart-core-api.tar
 
       # 🔐 Escribir clave SSH privada en archivo
-      - name: Write SSH private key to file
+      - name: Write SSH private key to file (preserving line breaks)
         run: |
-          echo "${{ secrets.VPS_SSH_KEY }}" > private_key
+          echo "$SSH_KEY" > private_key
           chmod 600 private_key
+        env:
+          SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+
 
       # 📦 Copiar imagen al VPS
       - name: Copy Docker image tarball to VPS
