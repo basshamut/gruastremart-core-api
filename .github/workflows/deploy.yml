@@ -9,6 +9,16 @@ jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     steps:
+
+      - name: Test SSH Connection
+        uses: appleboy/ssh-action@v0.1.0
+        with:
+          host: ${{ secrets.VPS_SSH_HOST }}
+          username: root
+          port: 22
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: echo "SSH desde GitHub Actions OK"
+
       # 1. Checkout del repositorio
       - name: Checkout repository
         uses: actions/checkout@v3
