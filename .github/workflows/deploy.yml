@@ -9,7 +9,6 @@ jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     steps:
-
       - name: Checkout repository
         uses: actions/checkout@v3
 
@@ -28,12 +27,12 @@ jobs:
       - name: Save Docker image as tarball
         run: docker save gruastremart-core-api:latest > gruastremart-core-api.tar
 
-      # 🔐 Descifrar clave SSH privada en runtime
+      # 🔐 Descifrar clave privada SSH
       - name: Decrypt SSH private key
         run: |
           gpg --batch --yes --passphrase "${{ secrets.GPG_PASSPHRASE }}" \
-            -o private_key -d .github/secrets/id_rsa_hostinger_vps_root.gpg
-          chmod 600 private_key
+            -o ./private_key -d .github/secrets/id_rsa_hostinger_vps_root.gpg
+          chmod 600 ./private_key
 
       # 📦 Copiar imagen al VPS
       - name: Copy Docker image tarball to VPS
@@ -42,18 +41,18 @@ jobs:
           host: ${{ secrets.VPS_SSH_HOST }}
           username: ${{ secrets.VPS_SSH_USERNAME }}
           port: 22
-          key_path: private_key
+          key_path: ./private_key
           source: "gruastremart-core-api.tar"
           target: "/home/${{ secrets.VPS_SSH_USERNAME }}/"
 
-      # 🚀 Ejecutar despliegue en el VPS
+      # 🚀 Desplegar en el VPS
       - name: Deploy Docker Container via SSH
         uses: appleboy/ssh-action@v0.1.0
         with:
           host: ${{ secrets.VPS_SSH_HOST }}
           username: ${{ secrets.VPS_SSH_USERNAME }}
           port: 22
-          key_path: private_key
+          key_path: ./private_key
           script: |
             docker rm -f gruastremart-core-api || true
             docker rmi -f gruastremart-core-api:latest || true
@@ -64,3 +63,8 @@ jobs:
               -p 8083:8080 \
               --env-file /home/${{ secrets.VPS_SSH_USERNAME }}/.env \
               gruastremart-core-api:latest
+
+      # 🗑️ Limpiar clave privada
+      - name: Cleanup private key
+        if: always()
+        run: rm -f ./private_key
