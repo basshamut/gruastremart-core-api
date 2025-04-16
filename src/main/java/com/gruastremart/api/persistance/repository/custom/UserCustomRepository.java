@@ -25,7 +25,6 @@ public class UserCustomRepository {
         int size = Integer.parseInt(Objects.requireNonNull(params.getFirst("size")));
         Pageable pageable = Pageable.ofSize(size).withPage(page);
 
-        // Build the query
         Query query = new Query();
         if (params.containsKey("role")) {
             query.addCriteria(Criteria.where("role").is(params.getFirst("role")));

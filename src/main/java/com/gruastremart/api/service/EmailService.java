@@ -1,5 +1,6 @@
 package com.gruastremart.api.service;
 
+import com.gruastremart.api.exception.ServiceException;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,7 +36,7 @@ public class EmailService {
      *
      * @param emailRequest DTO que contiene name, email, phone y message
      */
-    public void sendContactEmail(final EmailRequestDto emailRequest) {
+    public boolean sendContactEmail(final EmailRequestDto emailRequest) {
         logger.info("Iniciando envío de correo de contacto...");
 
         boolean send = false;
@@ -62,10 +63,10 @@ public class EmailService {
             sender.send(message);
             logger.info("¡Correo enviado correctamente!");
 
+            return true;
         } catch (Exception e) {
             logger.error("Error al enviar el correo de contacto: ", e);
+            throw new ServiceException("Error al enviar el correo de contacto", 500);
         }
-
-        logger.info("Finalizando proceso de envío de correo.");
     }
 }

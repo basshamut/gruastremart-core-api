@@ -1,4 +1,4 @@
-package com.gruastremart.api.service.mapper;
+package com.gruastremart.api.mapper;
 
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;

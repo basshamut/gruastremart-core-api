@@ -18,7 +18,7 @@ public class ContactFormController {
     //private final ContactFormService contactFormService;
 
     @PostMapping
-    public ResponseEntity<ContactFormResponseDto> createContactForm(@RequestBody ContactFormCreateRequestDto owner) {
+    public ResponseEntity<ContactFormResponseDto> createContactForm(@RequestBody ContactFormCreateRequestDto contactFormCreateRequestDto ) {
         var created = ContactFormResponseDto.builder()
                 .email("test@test.com")
                 .name("Test")
