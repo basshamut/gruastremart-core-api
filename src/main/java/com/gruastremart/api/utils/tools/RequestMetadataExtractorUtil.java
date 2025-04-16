@@ -1,51 +1,61 @@
 package com.gruastremart.api.utils.tools;
 
 import com.gruastremart.api.dto.RequestMetadataDto;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.stereotype.Component;
 
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Optional;
 
+@Component
 public class RequestMetadataExtractorUtil {
 
-    private RequestMetadataExtractorUtil() {
-        throw new IllegalStateException("Utility class");
+    private static String jwtSecret;
+
+    private static final String TOKEN_PREFIX = "Bearer ";
+
+    @Value("${app.security.supabaseSecret}")
+    public void setJwtSecret(String secret) {
+        jwtSecret = secret;
     }
 
     public static RequestMetadataDto extract(HttpServletRequest request) {
         var authentication = SecurityContextHolder.getContext().getAuthentication();
-        var userDetails = (UserDetails) authentication.getPrincipal();
-        Object details = authentication.getDetails();
-        Map<String, Object> claims = extractClaims(details);
+        var userId = authentication.getName();
+        var principal = authentication.getPrincipal().toString();
 
-        String email = userDetails.getUsername();
-        String userId = authentication.getName();
-        String role = claims.getOrDefault("role", "USER").toString();
+        var claims = extractClaimsFromToken(request);
+        var role = claims.getOrDefault("role", "USER").toString();
 
-        String ip = Optional.ofNullable(request.getHeader("X-Forwarded-For"))
+        var ip = Optional.ofNullable(request.getHeader("X-Forwarded-For"))
                 .orElse(request.getRemoteAddr());
 
-        String userAgent = request.getHeader("User-Agent");
-        LocalDateTime timestamp = LocalDateTime.now();
+        var userAgent = request.getHeader("User-Agent");
+        var timestamp = LocalDateTime.now();
 
-        return new RequestMetadataDto(userId, email, role, ip, userAgent, timestamp);
+        return new RequestMetadataDto(userId, principal, role, ip, userAgent, timestamp);
     }
 
-    private static Map<String, Object> extractClaims(Object details) {
-        if (details instanceof Map<?, ?> map) {
-            Map<String, Object> claims = new HashMap<>();
-            for (Map.Entry<?, ?> entry : map.entrySet()) {
-                if (entry.getKey() instanceof String) {
-                    claims.put((String) entry.getKey(), entry.getValue());
-                }
-            }
-            return claims;
-        } else {
-            throw new IllegalStateException("Authentication details are not a Map");
+    private static Claims extractClaimsFromToken(HttpServletRequest request) {
+        var token = request.getHeader("Authorization");
+
+        if (token == null || !token.startsWith(TOKEN_PREFIX)) {
+            throw new IllegalStateException("Token JWT no encontrado o inválido");
         }
+
+        token = token.replace(TOKEN_PREFIX, "");
+
+        var decodedKey = jwtSecret.getBytes(StandardCharsets.UTF_8);
+
+        return Jwts.parserBuilder()
+                .setSigningKey(decodedKey)
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
     }
 }

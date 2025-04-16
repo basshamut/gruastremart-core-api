@@ -25,4 +25,5 @@ public class User {
     private String identificationNumber;
     private String birthDate;
     private Role role;
+    private Boolean active;
 }
