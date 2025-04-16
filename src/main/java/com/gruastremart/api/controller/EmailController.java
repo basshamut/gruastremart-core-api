@@ -21,11 +21,7 @@ public class EmailController {
 
     @PostMapping("/contact")
     public ResponseEntity<?> sendContactEmail(@RequestBody EmailRequestDto emailRequest) {
-        try {
-            emailService.sendContactEmail(emailRequest);
-            return ResponseEntity.ok().body("Correo enviado correctamente");
-        } catch (Exception e) {
-            return ResponseEntity.status(500).body("Error al enviar el correo: " + e.getMessage());
-        }
+        emailService.sendContactEmail(emailRequest);
+        return ResponseEntity.ok().body("Correo enviado correctamente");
     }
 }

@@ -14,7 +14,7 @@ import lombok.NoArgsConstructor;
 public class CraneDemandResponseDto {
     private String id;
     private String description;
-    private Date dueDate;
+    private Date createdAt;
     private String state;
     private String userId;
     private String origin;

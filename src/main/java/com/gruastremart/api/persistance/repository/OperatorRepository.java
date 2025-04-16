@@ -8,5 +8,5 @@ import java.util.Optional;
 
 @Repository
 public interface OperatorRepository extends MongoRepository<CraneOperator, String> {
-    Optional<CraneOperator> findByEmail(String email);
+    Optional<CraneOperator> findByUserId(String id);
 }

@@ -20,9 +20,12 @@ public class CraneDemand {
     @Id
     private String id;
     private String description;
-    private Date dueDate;
+    private Date createdAt;
+    private Date updatedAt;
     private String state;
-    private String userId;
+    private String createdByUserId;
+    private String editedByUserId;
+    private String assignedOperatorId;
     private String origin;
     private String carType;
     private String breakdown;
@@ -32,7 +35,6 @@ public class CraneDemand {
     private GeoJsonPoint currentLocation;
     private String currentLocationName;
     private Double currentLocationAccuracy;
-
     @GeoSpatialIndexed
     private GeoJsonPoint destinationLocation;
     private String destinationLocationName;

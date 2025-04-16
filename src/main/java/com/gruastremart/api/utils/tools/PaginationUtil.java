@@ -5,9 +5,9 @@ public class PaginationUtil {
         try {
             int pageInt = Integer.parseInt(page);
             int sizeInt = Integer.parseInt(size);
-            return pageInt >= 0 && sizeInt > 0;
+            return pageInt < 0 || sizeInt <= 0;
         } catch (NumberFormatException e) {
-            return false;
+            return true;
         }
     }
 }
