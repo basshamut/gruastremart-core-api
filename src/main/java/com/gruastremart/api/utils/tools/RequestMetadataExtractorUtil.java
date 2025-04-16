@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
@@ -49,10 +50,11 @@ public class RequestMetadataExtractorUtil {
 
         token = token.replace(TOKEN_PREFIX, "");
 
-        var decodedKey = jwtSecret.getBytes();
+        var decodedKey = jwtSecret.getBytes(StandardCharsets.UTF_8);
 
-        return Jwts.parser()
+        return Jwts.parserBuilder()
                 .setSigningKey(decodedKey)
+                .build()
                 .parseClaimsJws(token)
                 .getBody();
     }

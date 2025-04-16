@@ -16,15 +16,16 @@ public interface CraneDemandMapper {
     CraneDemandMapper MAPPER = org.mapstruct.factory.Mappers.getMapper(CraneDemandMapper.class);
 
     @Mapping(target = "id", ignore = true)
+    @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "currentLocationName", source = "currentLocation.name")
     @Mapping(target = "currentLocationAccuracy", source = "currentLocation.accuracy")
     @Mapping(target = "destinationLocationName", source = "destinationLocation.name")
     @Mapping(target = "destinationLocationAccuracy", source = "destinationLocation.accuracy")
-
     @Mapping(target = "currentLocation",  expression = "java(mapToLocation(dto.getCurrentLocation()))")
     @Mapping(target = "destinationLocation", expression = "java(mapToLocation(dto.getDestinationLocation()))")
     CraneDemand mapToEntity(CraneDemandCreateRequestDto dto);
 
+    @Mapping(target = "userId", ignore = true)
     @Mapping(source = "entity.createdAt", target = "createdAt", dateFormat = "dd/MM/yyyy")
     @Mapping(target = "currentLocation", expression = "java(mapToLocationDto(entity.getCurrentLocation(), entity.getCurrentLocationName(), entity.getCurrentLocationAccuracy()))")
     @Mapping(target = "destinationLocation", expression = "java(mapToLocationDto(entity.getDestinationLocation(), entity.getDestinationLocationName(), entity.getDestinationLocationAccuracy()))")

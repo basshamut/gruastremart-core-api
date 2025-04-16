@@ -2,7 +2,6 @@ package com.gruastremart.api.service;
 
 import com.gruastremart.api.dto.CraneDemandCreateRequestDto;
 import com.gruastremart.api.dto.CraneDemandResponseDto;
-import com.gruastremart.api.dto.CraneDemandAssignRequestDto;
 import com.gruastremart.api.exception.ServiceException;
 import com.gruastremart.api.mapper.CraneDemandMapper;
 import com.gruastremart.api.persistance.entity.CraneDemand;
@@ -95,7 +94,7 @@ public class CraneDemandService {
 
         var operator = operatorRepository.findByUserId(user.get().getId());
         if (operator.isEmpty()) {
-            throw new ServiceException("User is not an operator", 404);
+            throw new ServiceException("User is not an operator", 400);
         }
 
         return optionalCraneDemand.map(craneDemand -> {
