@@ -34,6 +34,21 @@ jobs:
             -o ./private_key -d .github/secrets/id_rsa_hostinger_vps_root.gpg
           chmod 600 ./private_key
 
+      # ✅ Validar que los secretos críticos existan
+      - name: Validar existencia de secretos requeridos
+        run: |
+          if [ -z "${{ secrets.VPS_SSH_USERNAME }}" ] || [ -z "${{ secrets.VPS_SSH_HOST }}" ] || [ -z "${{ secrets.ENV_FILE }}" ]; then
+            echo "❌ Faltan uno o más secretos obligatorios."
+            exit 1
+          fi
+
+      # 🐛 Debug: Mostrar temporalmente los secretos (⚠️ no dejar en producción)
+      - name: Debug SSH variables (⚠️ no dejar en producción)
+        run: |
+          echo "Usuario: ${{ secrets.VPS_SSH_USERNAME }}"
+          echo "Host: '${{ secrets.VPS_SSH_HOST }}'"
+          echo "ENV_FILE: '${{ secrets.ENV_FILE }}'"
+
       # 📦 Copiar imagen manualmente al VPS
       - name: Copy Docker image tarball manually using scp
         run: |
