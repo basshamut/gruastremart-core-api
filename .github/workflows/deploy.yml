@@ -62,17 +62,14 @@ jobs:
           ssh -i ./private_key -o StrictHostKeyChecking=no ${{ secrets.VPS_SSH_USERNAME }}@${{ secrets.VPS_SSH_HOST }} << 'EOF'
             docker rm -f gruastremart-core-api || true
             docker rmi -f gruastremart-core-api:latest || true
-            echo "$ENV_FILE" > /home/$USER/.env
-            docker load -i /home/$USER/gruastremart-core-api.tar
+            echo "${{ secrets.ENV_FILE }}" > /home/${{ secrets.VPS_SSH_USERNAME }}/.env
+            docker load -i /home/${{ secrets.VPS_SSH_USERNAME }}/gruastremart-core-api.tar
             docker run -d \
               --name gruastremart-core-api \
               -p 8083:8080 \
-              --env-file /home/$USER/.env \
+              --env-file /home/${{ secrets.VPS_SSH_USERNAME }}/.env \
               gruastremart-core-api:latest
           EOF
-        env:
-          ENV_FILE: ${{ secrets.ENV_FILE }}
-          USER: ${{ secrets.VPS_SSH_USERNAME }}
 
       # 🗑️ Limpiar clave privada
       - name: Cleanup private key
