@@ -57,7 +57,8 @@ public class CraneDemandController {
                     name = "state",
                     description = "Filtrar por estado de la demanda",
                     schema = @Schema(allowableValues = {"ACTIVE", "INACTIVE", "TAKEN", "COMPLETED"})
-            )
+            ),
+            @Parameter(name = "createdByUserId", description = "ID del usuario que creó la demanda")
     })
     public ResponseEntity<Page<CraneDemandResponseDto>> findWithFilters(@Parameter(description = "Query parameters for filtering crane demands") @RequestParam(required = false) MultiValueMap<String, String> params) {
         var users = craneDemandService.findWithFilters(params);

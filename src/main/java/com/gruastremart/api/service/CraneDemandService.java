@@ -104,6 +104,7 @@ public class CraneDemandService {
             craneDemand.setState(CraneDemandStateEnum.TAKEN.name());
             craneDemand.setUpdatedAt(new Date());
             CraneDemand updated = craneDemandRepository.save(craneDemand);
+            messagingTemplate.convertAndSend("/topic/demand-taken/" + craneDemand.getId(), CraneDemandMapper.MAPPER.mapToDto(updated));
             return CraneDemandMapper.MAPPER.mapToDto(updated);
         });
     }
