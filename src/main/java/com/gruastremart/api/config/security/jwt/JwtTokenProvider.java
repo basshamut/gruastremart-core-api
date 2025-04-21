@@ -60,3 +60,5 @@ public class JwtTokenProvider {
         return new UsernamePasswordAuthenticationToken(email, token, authorities);
     }
 }
+
+//TODO chequear bien el tema de los roles y permisos

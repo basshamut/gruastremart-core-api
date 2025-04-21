@@ -35,7 +35,12 @@ public class CraneDemandCustomRepository {
 
         var query = new Query();
         if (params.containsKey("state")) {
-            query.addCriteria(Criteria.where("state").is(CraneDemandStateEnum.valueOf(params.getFirst("state"))));
+            var state = CraneDemandStateEnum.valueOf(params.getFirst("state")).name();
+            query.addCriteria(Criteria.where("state").is(state));
+        }
+
+        if (params.containsKey("createdByUserId")) {
+            query.addCriteria(Criteria.where("createdByUserId").is(params.getFirst("createdByUserId")));
         }
 
         if (lat != 0 && lng != 0 && radio != 0) {
