@@ -3,7 +3,6 @@ package com.gruastremart.api.controller;
 import com.gruastremart.api.controller.handler.json.HttpErrorInfoJson;
 import com.gruastremart.api.dto.CraneDemandCreateRequestDto;
 import com.gruastremart.api.dto.CraneDemandResponseDto;
-import com.gruastremart.api.dto.RequestMetadataDto;
 import com.gruastremart.api.service.CraneDemandService;
 import com.gruastremart.api.utils.tools.RequestMetadataExtractorUtil;
 import io.swagger.v3.oas.annotations.Operation;
@@ -19,7 +18,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.MultiValueMap;
-import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -81,7 +79,7 @@ public class CraneDemandController {
         return new ResponseEntity<>(created, HttpStatus.CREATED);
     }
 
-    @PatchMapping("/{craneDemandId}")
+    @PatchMapping("/{craneDemandId}/assign")
     public ResponseEntity<CraneDemandResponseDto> assignCraneDemand(@PathVariable String craneDemandId, HttpServletRequest request) {
         var meta = RequestMetadataExtractorUtil.extract(request);
         var updated = craneDemandService.assignCraneDemand(craneDemandId, meta.getEmail());
@@ -90,9 +88,9 @@ public class CraneDemandController {
                 .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteCraneDemand(@PathVariable String id) {
-        craneDemandService.deleteCraneDemand(id);
+    @PatchMapping("/{id}/cancel")
+    public ResponseEntity<Void> cancelCraneDemand(@PathVariable String id) {
+        craneDemandService.cancelCraneDemand(id);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 

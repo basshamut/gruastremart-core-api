@@ -154,12 +154,12 @@ public class CraneDemandService {
         return updated;
     }
 
-    public void deleteCraneDemand(String craneDemandId) {
+    public void cancelCraneDemand(String craneDemandId) {
         var craneDemandEntity = craneDemandRepository.findById(craneDemandId);
         if (craneDemandEntity.isEmpty()) {
             throw new ServiceException("User not found", 404);
         }
-        craneDemandEntity.get().setState("INACTIVE");
+        craneDemandEntity.get().setState(CraneDemandStateEnum.CANCELLED.name());
         craneDemandRepository.save(craneDemandEntity.get());
     }
 }

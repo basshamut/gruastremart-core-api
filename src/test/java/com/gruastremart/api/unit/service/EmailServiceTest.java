@@ -41,7 +41,8 @@ public class EmailServiceTest {
         emailService = new EmailService(mailSender);
         TestUtils.setField(emailService, "from", "test@gruastremart.com");
         TestUtils.setField(emailService, "to", "destino@gruastremart.com");
-        TestUtils.setField(emailService, "subject", "Solicitud recibida");
+        TestUtils.setField(emailService, "contactSubject", "Solicitud de contacto");
+        TestUtils.setField(emailService, "demandSubject", "Solicitud recibida");
     }
 
     @Test
