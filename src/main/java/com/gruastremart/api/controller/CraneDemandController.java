@@ -75,16 +75,17 @@ public class CraneDemandController {
     public ResponseEntity<CraneDemandResponseDto> createCraneDemand(
             @RequestBody CraneDemandCreateRequestDto craneDemandRequest, HttpServletRequest request) {
 
-        RequestMetadataDto meta = RequestMetadataExtractorUtil.extract(request);
-
+        var meta = RequestMetadataExtractorUtil.extract(request);
         var created = craneDemandService.createCraneDemand(craneDemandRequest, meta.getEmail());
+
         return new ResponseEntity<>(created, HttpStatus.CREATED);
     }
 
     @PatchMapping("/{craneDemandId}")
     public ResponseEntity<CraneDemandResponseDto> assignCraneDemand(@PathVariable String craneDemandId, HttpServletRequest request) {
-        RequestMetadataDto meta = RequestMetadataExtractorUtil.extract(request);
-        var updated = craneDemandService.assignCraneDemand(craneDemandId, meta.getUserId());
+        var meta = RequestMetadataExtractorUtil.extract(request);
+        var updated = craneDemandService.assignCraneDemand(craneDemandId, meta.getEmail());
+
         return updated.map(value -> new ResponseEntity<>(value, HttpStatus.OK))
                 .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }

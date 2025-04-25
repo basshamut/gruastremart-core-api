@@ -67,5 +67,4 @@ public class EmailControllerTest {
         assertEquals("Error al enviar el correo de contacto", exception.getMessage());
         assertEquals(500, exception.getCode());
     }
-
 }

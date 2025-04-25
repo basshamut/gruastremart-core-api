@@ -34,4 +34,5 @@ app:
 mailer:
   from: "job.jesus.1702@gmail.com"
   to: "tremartca@gmail.com"
-  subject: "Nuevo mensaje de contacto (Prueba / Local)"
+  contact-subject: "Nuevo mensaje de contacto (Prueba / Local)"
+  demand-subject: "Solicitud de Atención Asignada (Prueba / Local)"

@@ -47,7 +47,6 @@ class UserControllerTest {
         assertEquals("test@example.com", result.getEmail());
     }
 
-    // Test para el método 'update' del UserController
     @Test
     void testUpdate() {
         // Arrange
@@ -57,7 +56,7 @@ class UserControllerTest {
         Mockito.when(userService.update(eq("1"), any(UserDto.class))).thenReturn(userDto);
 
         // Act
-        UserDto result = userController.update("1", userDto).getBody(); // Llamada directa al método del controller
+        UserDto result = userController.update("1", userDto).getBody();
 
         // Assert
         assertNotNull(result);

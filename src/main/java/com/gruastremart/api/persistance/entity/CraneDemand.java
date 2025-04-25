@@ -1,5 +1,6 @@
 package com.gruastremart.api.persistance.entity;
 
+import com.gruastremart.api.utils.enums.CraneDemandStateEnum;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -39,4 +40,8 @@ public class CraneDemand {
     private GeoJsonPoint destinationLocation;
     private String destinationLocationName;
     private Double destinationLocationAccuracy;
+
+    public boolean isActiveOrTaken() {
+        return this.getState().equals(CraneDemandStateEnum.ACTIVE.name()) || this.getState().equals(CraneDemandStateEnum.TAKEN.name());
+    }
 }
