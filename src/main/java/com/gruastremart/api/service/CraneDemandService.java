@@ -100,8 +100,8 @@ public class CraneDemandService {
     public Optional<CraneDemandResponseDto> assignCraneDemand(String craneDemandId, String userEmail) {
         var craneDemand = getCreaneDemandById(craneDemandId);
         var userThatCreatedDemand = getUserById(craneDemand.getCreatedByUserId());
-        var userThatTakeDemanad = getUserByEmail(userEmail);
-        var userAsOperator = getOperatorByUserId(userThatTakeDemanad.getId());
+        var userThatTakeDemand = getUserByEmail(userEmail);
+        var userAsOperator = getOperatorByUserId(userThatTakeDemand.getId());
 
         CraneDemand updated = updateCraneDemandWithOperatorInformation(craneDemand, userThatCreatedDemand, userAsOperator);
 
@@ -161,5 +161,9 @@ public class CraneDemandService {
         }
         craneDemandEntity.get().setState(CraneDemandStateEnum.CANCELLED.name());
         craneDemandRepository.save(craneDemandEntity.get());
+    }
+
+    public void notifyOperatorLocation(String craneDemandId, String locationJson) {
+        messagingTemplate.convertAndSend("/topic/operator-location/" + craneDemandId, locationJson);
     }
 }

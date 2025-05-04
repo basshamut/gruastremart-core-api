@@ -17,6 +17,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.messaging.handler.annotation.DestinationVariable;
+import org.springframework.messaging.handler.annotation.MessageMapping;
+import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -94,4 +97,11 @@ public class CraneDemandController {
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
+    @MessageMapping("/operator-location/{craneDemandId}")
+    public void handleOperatorLocation(
+            @DestinationVariable String craneDemandId,
+            @Payload String locationJson // Puede ser un String o un objeto, según tu frontend
+    ) {
+        craneDemandService.notifyOperatorLocation(craneDemandId, locationJson);
+    }
 }
