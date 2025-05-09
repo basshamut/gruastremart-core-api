@@ -61,14 +61,18 @@ jobs:
             # Importar la imagen al containerd de k3s
             sudo k3s ctr images import /home/${{ secrets.VPS_SSH_USERNAME }}/gruastremart-core-api.tar
 
-            # Crear o actualizar el Secret desde el .env local en el VPS
+            # Crear o actualizar el Secret desde el .env local
             sudo kubectl create secret generic gruastremart-core-env \
               --from-file=.env=/home/k3s-deployments/gruastremart-core-api/.env \
               --dry-run=client -o yaml | sudo kubectl apply -f -
 
-            # Reiniciar el deployment para aplicar los cambios
+            # Aplicar el deployment si aún no existe o se ha actualizado
+            sudo kubectl apply -f /home/k3s-deployments/gruastremart-core-api/deploy-gruastremart-core-api.yml
+
+            # Reiniciar el deployment para que coja la nueva imagen y config
             sudo kubectl rollout restart deployment deploy-gruastremart-core-api
           EOF
+
 
       # 🧹 10. Limpiar clave privada
       - name: Cleanup private key
