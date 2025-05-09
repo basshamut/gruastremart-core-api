@@ -42,7 +42,7 @@ jobs:
       # ✅ 7. Validar existencia de secretos requeridos
       - name: Validar existencia de secretos requeridos
         run: |
-          if [ -z "${{ secrets.VPS_SSH_USERNAME }}" ] || [ -z "${{ secrets.VPS_SSH_HOST }}" ] || [ -z "${{ secrets.ENV_FILE }}" ]; then
+          if [ -z "${{ secrets.VPS_SSH_USERNAME }}" ] || [ -z "${{ secrets.VPS_SSH_HOST }}" ]; then
             echo "❌ Faltan uno o más secretos obligatorios."
             exit 1
           fi
@@ -54,26 +54,21 @@ jobs:
             gruastremart-core-api.tar \
             ${{ secrets.VPS_SSH_USERNAME }}@${{ secrets.VPS_SSH_HOST }}:/home/${{ secrets.VPS_SSH_USERNAME }}/
 
-      # 🚀 9. Desplegar en k3s por SSH
+      # 🚀 9. Desplegar en k3s usando el .env local del VPS
       - name: Deploy to k3s manually
         run: |
           ssh -i ./private_key -o StrictHostKeyChecking=no ${{ secrets.VPS_SSH_USERNAME }}@${{ secrets.VPS_SSH_HOST }} << 'EOF'
-            # Guardar el archivo .env con precisión
-            cat << 'ENVEOF' > /home/${{ secrets.VPS_SSH_USERNAME }}/.env
-            ${{ secrets.ENV_FILE }}
-            ENVEOF
+            # Importar la imagen al containerd de k3s
+            sudo k3s ctr images import /home/${{ secrets.VPS_SSH_USERNAME }}/gruastremart-core-api.tar
 
-                        # Importar la imagen al containerd de k3s
-                        sudo k3s ctr images import /home/${{ secrets.VPS_SSH_USERNAME }}/gruastremart-core-api.tar
+            # Crear o actualizar el Secret desde el .env local en el VPS
+            sudo kubectl create secret generic gruastremart-core-env \
+              --from-file=.env=/home/k3s-deployments/gruastremart-core-api/.env \
+              --dry-run=client -o yaml | sudo kubectl apply -f -
 
-                        # Crear/actualizar el Secret desde el .env
-                        sudo kubectl create secret generic gruastremart-core-env \
-                        --from-file=.env=/home/${{ secrets.VPS_SSH_USERNAME }}/.env \
-                        --dry-run=client -o yaml | sudo kubectl apply -f -
-
-                        # Reiniciar el deployment para que tome los nuevos valores
-                        sudo kubectl rollout restart deployment gruastremart-core-api
-            EOF
+            # Reiniciar el deployment para aplicar los cambios
+            sudo kubectl rollout restart deployment gruastremart-core-api
+          EOF
 
       # 🧹 10. Limpiar clave privada
       - name: Cleanup private key
