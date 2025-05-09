@@ -1,4 +1,4 @@
-name: Deploy to Docker on VPS
+name: Deploy to k3s on VPS
 
 on:
   push:
@@ -8,63 +8,51 @@ on:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+
     steps:
+      # 1. Checkout del repositorio
       - name: Checkout repository
         uses: actions/checkout@v3
 
+      # 2. Configurar Java 21 (Temurin)
       - name: Set up Java 21
         uses: actions/setup-java@v3
         with:
           distribution: temurin
           java-version: '21'
 
+      # 3. Compilar con Maven (sin tests)
       - name: Build with Maven
         run: mvn clean package -DskipTests
 
+      # 4. Construir imagen Docker
       - name: Build Docker image
         run: docker build -t gruastremart-core-api:latest .
 
+      # 5. Guardar la imagen como tarball
       - name: Save Docker image as tarball
         run: docker save gruastremart-core-api:latest > gruastremart-core-api.tar
 
-      # 🔐 Descifrar clave privada SSH
-      - name: Decrypt SSH private key
-        run: |
-          gpg --batch --yes --passphrase "${{ secrets.GPG_PASSPHRASE }}" \
-            -o ./private_key -d .github/secrets/secrets.gpg
-          chmod 600 ./private_key
+      # 6. Copiar la imagen al VPS vía SCP
+      - name: Copy Docker image tarball to VPS
+        uses: appleboy/scp-action@v0.1.0
+        with:
+          host: ${{ secrets.VPS_SSH_HOST }}
+          username: ${{ secrets.VPS_SSH_USERNAME }}
+          port: 22
+          key: ${{ secrets.VPS_SSH_KEY }}
+          source: "gruastremart-core-api.tar"
+          target: "/home/${{ secrets.VPS_SSH_USERNAME }}/"
 
-      # ✅ Validar que los secretos críticos existan
-      - name: Validar existencia de secretos requeridos
-        run: |
-          if [ -z "${{ secrets.VPS_SSH_USERNAME }}" ] || [ -z "${{ secrets.VPS_SSH_HOST }}" ] || [ -z "${{ secrets.ENV_FILE }}" ]; then
-            echo "❌ Faltan uno o más secretos obligatorios."
-            exit 1
-          fi
-
-      # 📦 Copiar imagen manualmente al VPS
-      - name: Copy Docker image tarball manually using scp
-        run: |
-          scp -i ./private_key -o StrictHostKeyChecking=no \
-            gruastremart-core-api.tar \
-            ${{ secrets.VPS_SSH_USERNAME }}@${{ secrets.VPS_SSH_HOST }}:/home/${{ secrets.VPS_SSH_USERNAME }}/
-
-      # 🚀 Desplegar en el VPS manualmente
-      - name: Deploy Docker container manually
-        run: |
-          ssh -i ./private_key -o StrictHostKeyChecking=no ${{ secrets.VPS_SSH_USERNAME }}@${{ secrets.VPS_SSH_HOST }} << 'EOF'
-            docker rm -f gruastremart-core-api || true
-            docker rmi -f gruastremart-core-api:latest || true
+      # 7. Despliegue en k3s por SSH
+      - name: Deploy to k3s via SSH
+        uses: appleboy/ssh-action@v0.1.0
+        with:
+          host: ${{ secrets.VPS_SSH_HOST }}
+          username: ${{ secrets.VPS_SSH_USERNAME }}
+          port: 22
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
             echo "${{ secrets.ENV_FILE }}" > /home/${{ secrets.VPS_SSH_USERNAME }}/.env
-            docker load -i /home/${{ secrets.VPS_SSH_USERNAME }}/gruastremart-core-api.tar
-            docker run -d \
-              --name gruastremart-core-api \
-              -p 8083:8080 \
-              --env-file /home/${{ secrets.VPS_SSH_USERNAME }}/.env \
-              gruastremart-core-api:latest
-          EOF
-
-      # 🗑️ Limpiar clave privada
-      - name: Cleanup private key
-        if: always()
-        run: rm -f ./private_key
+            sudo k3s ctr images import /home/${{ secrets.VPS_SSH_USERNAME }}/gruastremart-core-api.tar
+            sudo kubectl rollout restart deployment gruastremart-core-api
