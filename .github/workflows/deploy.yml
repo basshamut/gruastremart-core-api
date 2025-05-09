@@ -67,7 +67,7 @@ jobs:
               --dry-run=client -o yaml | sudo kubectl apply -f -
 
             # Reiniciar el deployment para aplicar los cambios
-            sudo kubectl rollout restart deployment gruastremart-core-api
+            sudo kubectl rollout restart deployment deploy-gruastremart-core-api
           EOF
 
       # 🧹 10. Limpiar clave privada
