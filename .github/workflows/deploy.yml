@@ -68,8 +68,8 @@ jobs:
 
                         # Crear/actualizar el Secret desde el .env
                         sudo kubectl create secret generic gruastremart-core-env \
-                          --from-env-file=/home/${{ secrets.VPS_SSH_USERNAME }}/.env \
-                          --dry-run=client -o yaml | sudo kubectl apply -f -
+                        --from-file=.env=/home/${{ secrets.VPS_SSH_USERNAME }}/.env \
+                        --dry-run=client -o yaml | sudo kubectl apply -f -
 
                         # Reiniciar el deployment para que tome los nuevos valores
                         sudo kubectl rollout restart deployment gruastremart-core-api
