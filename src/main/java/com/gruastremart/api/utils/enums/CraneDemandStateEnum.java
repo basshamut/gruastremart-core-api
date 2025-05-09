@@ -4,11 +4,10 @@ public enum CraneDemandStateEnum {
     ACTIVE("ACTIVE"),
     INACTIVE("INACTIVE"),
     TAKEN("TAKEN"),
-    COMPLETED("COMPLETED");
-
-    private final String state;
+    COMPLETED("COMPLETED"),
+    CANCELLED("CANCELLED"),
+    ;
 
     CraneDemandStateEnum(String state) {
-        this.state = state;
     }
-    }
+}

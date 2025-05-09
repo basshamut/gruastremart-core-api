@@ -25,7 +25,7 @@
         <appender-ref ref="WEBSOCKET"/>
     </logger>
 
-    <!-- Raíz del logger para todo lo demás -->
+    <!-- Raíz del logger para todos lo demás -->
     <root level="INFO">
         <appender-ref ref="STDOUT"/>
     </root>

@@ -207,12 +207,12 @@ class CraneDemandControllerTest {
 
 
     @Test
-    void testDeleteCraneDemand() {
+    void testCancelCraneDemand() {
         // Arrange
-        Mockito.doNothing().when(craneDemandService).deleteCraneDemand(eq("1"));
+        Mockito.doNothing().when(craneDemandService).cancelCraneDemand(eq("1"));
 
         // Act
-        ResponseEntity<Void> result = craneDemandController.deleteCraneDemand("1");
+        ResponseEntity<Void> result = craneDemandController.cancelCraneDemand("1");
 
         // Assert
         assertEquals(HttpStatus.NO_CONTENT, result.getStatusCode());

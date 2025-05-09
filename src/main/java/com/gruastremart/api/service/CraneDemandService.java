@@ -5,6 +5,8 @@ import com.gruastremart.api.dto.CraneDemandResponseDto;
 import com.gruastremart.api.exception.ServiceException;
 import com.gruastremart.api.mapper.CraneDemandMapper;
 import com.gruastremart.api.persistance.entity.CraneDemand;
+import com.gruastremart.api.persistance.entity.CraneOperator;
+import com.gruastremart.api.persistance.entity.User;
 import com.gruastremart.api.persistance.repository.CraneDemandRepository;
 import com.gruastremart.api.persistance.repository.OperatorRepository;
 import com.gruastremart.api.persistance.repository.UserRepository;
@@ -33,6 +35,8 @@ public class CraneDemandService {
     private final UserRepository userRepository;
     private final OperatorRepository operatorRepository;
 
+    private final EmailService emailService;
+
     private final SimpMessagingTemplate messagingTemplate;
 
     public Page<CraneDemandResponseDto> findWithFilters(MultiValueMap<String, String> params) {
@@ -59,19 +63,31 @@ public class CraneDemandService {
         return CraneDemandMapper.MAPPER.mapToDto(craneDemand.get());
     }
 
-    public CraneDemandResponseDto createCraneDemand(CraneDemandCreateRequestDto craneDemandCreateRequestDto, String email) {
-        var user = userRepository.findByEmail(email);
-        if (user.isEmpty()) {
-            throw new ServiceException("User not found", 404);
-        }
-        var craneDemandBuilded = buildCraneDemandEntityForSave(craneDemandCreateRequestDto, user.get().getId());
-        var craneDemandSaved = craneDemandRepository.save(craneDemandBuilded);
-        var craneDemandSavedDto = CraneDemandMapper.MAPPER.mapToDto(craneDemandSaved);
+    public CraneDemandResponseDto createCraneDemand(CraneDemandCreateRequestDto dto, String email) {
+        var user = getUserByEmail(email);
 
-        messagingTemplate.convertAndSend("/topic/new-demand", craneDemandSavedDto);
+        validateUserHasNoActiveDemand(user.getId());
 
-        return craneDemandSavedDto;
+        var craneDemand = buildCraneDemandEntityForSave(dto, user.getId());
+        var saved = craneDemandRepository.save(craneDemand);
+        var response = CraneDemandMapper.MAPPER.mapToDto(saved);
+
+        notifyNewDemand(response);
+
+        return response;
     }
+
+    private void validateUserHasNoActiveDemand(String userId) {
+        var demands = craneDemandRepository.findByCreatedByUserId(userId);
+        if (demands.stream().anyMatch(CraneDemand::isActiveOrTaken)) {
+            throw new ServiceException("User already has an active or taken crane demand", 400);
+        }
+    }
+
+    private void notifyNewDemand(CraneDemandResponseDto dto) {
+        messagingTemplate.convertAndSend("/topic/new-demand", dto);
+    }
+
 
     private CraneDemand buildCraneDemandEntityForSave(CraneDemandCreateRequestDto craneDemandCreateRequestDto, String userId) {
         var craneDemandMapped = CraneDemandMapper.MAPPER.mapToEntity(craneDemandCreateRequestDto);
@@ -82,38 +98,72 @@ public class CraneDemandService {
     }
 
     public Optional<CraneDemandResponseDto> assignCraneDemand(String craneDemandId, String userEmail) {
-        var optionalCraneDemand = craneDemandRepository.findById(craneDemandId);
-        if (optionalCraneDemand.isEmpty()) {
+        var craneDemand = getCreaneDemandById(craneDemandId);
+        var userThatCreatedDemand = getUserById(craneDemand.getCreatedByUserId());
+        var userThatTakeDemand = getUserByEmail(userEmail);
+        var userAsOperator = getOperatorByUserId(userThatTakeDemand.getId());
+
+        CraneDemand updated = updateCraneDemandWithOperatorInformation(craneDemand, userThatCreatedDemand, userAsOperator);
+
+        return Optional.of(CraneDemandMapper.MAPPER.mapToDto(updated));
+    }
+
+    private CraneDemand getCreaneDemandById(String craneDemandId) {
+        var craneDemand = craneDemandRepository.findById(craneDemandId);
+        if (craneDemand.isEmpty()) {
             throw new ServiceException("Crane request not found", 404);
         }
+        return craneDemand.get();
+    }
 
-        var user = userRepository.findByEmail(userEmail);
+    private User getUserById(String userId) {
+        var user = userRepository.findById(userId);
         if (user.isEmpty()) {
             throw new ServiceException("User not found", 404);
         }
 
-        var operator = operatorRepository.findByUserId(user.get().getId());
-        if (operator.isEmpty()) {
-            throw new ServiceException("User is not an operator", 400);
-        }
-
-        return optionalCraneDemand.map(craneDemand -> {
-
-            craneDemand.setEditedByUserId(user.get().getId());
-            craneDemand.setAssignedOperatorId(operator.get().getId());
-            craneDemand.setState(CraneDemandStateEnum.TAKEN.name());
-            craneDemand.setUpdatedAt(new Date());
-            CraneDemand updated = craneDemandRepository.save(craneDemand);
-            return CraneDemandMapper.MAPPER.mapToDto(updated);
-        });
+        return user.get();
     }
 
-    public void deleteCraneDemand(String craneDemandId) {
+    private User getUserByEmail(String email) {
+        var user = userRepository.findByEmail(email);
+        if (user.isEmpty()) {
+            throw new ServiceException("User not found", 404);
+        }
+
+        return user.get();
+    }
+
+    private CraneOperator getOperatorByUserId(String userId) {
+        var operator = operatorRepository.findByUserId(userId);
+        if (operator.isEmpty()) {
+            throw new ServiceException("Operator not found", 404);
+        }
+
+        return operator.get();
+    }
+
+    private CraneDemand updateCraneDemandWithOperatorInformation(CraneDemand craneDemand, User user, CraneOperator operator) {
+        craneDemand.setEditedByUserId(user.getId());
+        craneDemand.setAssignedOperatorId(operator.getId());
+        craneDemand.setState(CraneDemandStateEnum.TAKEN.name());
+        craneDemand.setUpdatedAt(new Date());
+        CraneDemand updated = craneDemandRepository.save(craneDemand);
+        emailService.sendResponseOfCraneDemandEmail(user.getName(), user.getEmail());
+        messagingTemplate.convertAndSend("/topic/demand-taken/" + craneDemand.getId(), CraneDemandMapper.MAPPER.mapToDto(updated));
+        return updated;
+    }
+
+    public void cancelCraneDemand(String craneDemandId) {
         var craneDemandEntity = craneDemandRepository.findById(craneDemandId);
         if (craneDemandEntity.isEmpty()) {
             throw new ServiceException("User not found", 404);
         }
-        craneDemandEntity.get().setState("INACTIVE");
+        craneDemandEntity.get().setState(CraneDemandStateEnum.CANCELLED.name());
         craneDemandRepository.save(craneDemandEntity.get());
+    }
+
+    public void notifyOperatorLocation(String craneDemandId, String locationJson) {
+        messagingTemplate.convertAndSend("/topic/operator-location/" + craneDemandId, locationJson);
     }
 }
