@@ -8,51 +8,65 @@ on:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-
     steps:
-      # 1. Checkout del repositorio
+      # 🔄 1. Clonar el repositorio
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      # 2. Configurar Java 21 (Temurin)
+      # ☕ 2. Configurar Java 21
       - name: Set up Java 21
         uses: actions/setup-java@v3
         with:
           distribution: temurin
           java-version: '21'
 
-      # 3. Compilar con Maven (sin tests)
+      # ⚙️ 3. Compilar el proyecto con Maven
       - name: Build with Maven
         run: mvn clean package -DskipTests
 
-      # 4. Construir imagen Docker
+      # 🐳 4. Construir la imagen Docker
       - name: Build Docker image
         run: docker build -t gruastremart-core-api:latest .
 
-      # 5. Guardar la imagen como tarball
+      # 🧱 5. Guardar la imagen como tarball
       - name: Save Docker image as tarball
         run: docker save gruastremart-core-api:latest > gruastremart-core-api.tar
 
-      # 6. Copiar la imagen al VPS vía SCP
-      - name: Copy Docker image tarball to VPS
-        uses: appleboy/scp-action@v0.1.0
-        with:
-          host: ${{ secrets.VPS_SSH_HOST }}
-          username: ${{ secrets.VPS_SSH_USERNAME }}
-          port: 22
-          key: ${{ secrets.VPS_SSH_KEY }}
-          source: "gruastremart-core-api.tar"
-          target: "/home/${{ secrets.VPS_SSH_USERNAME }}/"
+      # 🔐 6. Descifrar clave privada SSH
+      - name: Decrypt SSH private key
+        run: |
+          gpg --batch --yes --passphrase "${{ secrets.GPG_PASSPHRASE }}" \
+            -o ./private_key -d .github/secrets/secrets.gpg
+          chmod 600 ./private_key
 
-      # 7. Despliegue en k3s por SSH
-      - name: Deploy to k3s via SSH
-        uses: appleboy/ssh-action@v0.1.0
-        with:
-          host: ${{ secrets.VPS_SSH_HOST }}
-          username: ${{ secrets.VPS_SSH_USERNAME }}
-          port: 22
-          key: ${{ secrets.VPS_SSH_KEY }}
-          script: |
+      # ✅ 7. Validar existencia de secretos requeridos
+      - name: Validar existencia de secretos requeridos
+        run: |
+          if [ -z "${{ secrets.VPS_SSH_USERNAME }}" ] || [ -z "${{ secrets.VPS_SSH_HOST }}" ] || [ -z "${{ secrets.ENV_FILE }}" ]; then
+            echo "❌ Faltan uno o más secretos obligatorios."
+            exit 1
+          fi
+
+      # 📦 8. Copiar imagen al VPS con scp
+      - name: Copy Docker image tarball manually using scp
+        run: |
+          scp -i ./private_key -o StrictHostKeyChecking=no \
+            gruastremart-core-api.tar \
+            ${{ secrets.VPS_SSH_USERNAME }}@${{ secrets.VPS_SSH_HOST }}:/home/${{ secrets.VPS_SSH_USERNAME }}/
+
+      # 🚀 9. Desplegar en k3s por SSH
+      - name: Deploy to k3s manually
+        run: |
+          ssh -i ./private_key -o StrictHostKeyChecking=no ${{ secrets.VPS_SSH_USERNAME }}@${{ secrets.VPS_SSH_HOST }} << 'EOF'
             echo "${{ secrets.ENV_FILE }}" > /home/${{ secrets.VPS_SSH_USERNAME }}/.env
             sudo k3s ctr images import /home/${{ secrets.VPS_SSH_USERNAME }}/gruastremart-core-api.tar
+            sudo kubectl create secret generic gruastremart-core-env \
+              --from-env-file=/home/${{ secrets.VPS_SSH_USERNAME }}/.env \
+              --dry-run=client -o yaml | sudo kubectl apply -f -
             sudo kubectl rollout restart deployment gruastremart-core-api
+          EOF
+
+      # 🧹 10. Limpiar clave privada
+      - name: Cleanup private key
+        if: always()
+        run: rm -f ./private_key
