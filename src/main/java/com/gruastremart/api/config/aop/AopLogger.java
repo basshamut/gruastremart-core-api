@@ -1,7 +1,7 @@
 package com.gruastremart.api.config.aop;
 
-import com.gruastremart.api.dto.CraneDemandCreateRequestDto;
 import com.gruastremart.api.dto.CraneDemandAssignRequestDto;
+import com.gruastremart.api.dto.CraneDemandCreateRequestDto;
 import com.gruastremart.api.dto.RequestMetadataDto;
 import com.gruastremart.api.utils.tools.RequestMetadataExtractorUtil;
 import jakarta.servlet.http.HttpServletRequest;
@@ -10,6 +10,7 @@ import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Before;
 import org.aspectj.lang.annotation.Pointcut;
 import org.springframework.stereotype.Component;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 @Slf4j
 @Aspect
@@ -21,6 +22,10 @@ public class AopLogger {
 
     @Pointcut("execution(* com.gruastremart.api.controller.CraneDemandController.updateCraneDemand(..))")
     public void updateCraneDemandPointcut() {
+    }
+
+    @Pointcut("execution(* com.gruastremart.api.controller.CraneDemandController.findWithFilters(..))")
+    public void findWithFiltersPointcut() {
     }
 
     private void logAuditInfo(RequestMetadataDto meta, String currentLocation, String destinationLocation) {
@@ -44,5 +49,14 @@ public class AopLogger {
         RequestMetadataDto meta = RequestMetadataExtractorUtil.extract(request);
         CraneDemandAssignRequestDto craneDemandRequest = (CraneDemandAssignRequestDto) joinPoint.getArgs()[1];
         logAuditInfo(meta, "N/A", "N/A");
+    }
+
+    @Before("findWithFiltersPointcut()")
+    public void logGetWithFiltersAuditInfo(org.aspectj.lang.JoinPoint joinPoint) {
+        HttpServletRequest request = ((ServletRequestAttributes) org.springframework.web.context.request.RequestContextHolder.currentRequestAttributes()).getRequest();
+        RequestMetadataDto meta = RequestMetadataExtractorUtil.extract(request);
+        log.info("AUDITORÍA - Fecha: {}, Usuario: {}, Rol: {}, Email: {}, IP: {}, User-Agent: {}",
+                meta.getTimestamp(), meta.getUserId(), meta.getRole(), meta.getEmail(),
+                meta.getIp(), meta.getUserAgent());
     }
 }

@@ -3,6 +3,7 @@ package com.gruastremart.api.persistance.repository.custom;
 import com.gruastremart.api.persistance.entity.CraneDemand;
 import com.gruastremart.api.utils.enums.CraneDemandStateEnum;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -20,6 +21,7 @@ import java.util.Objects;
 
 @RequiredArgsConstructor
 @Repository
+@Slf4j
 public class CraneDemandCustomRepository {
     public static final int DEFAULT_PAGE_VALUE = 0;
     public static final int DEFAULT_SIZE_VALUE = 10;
