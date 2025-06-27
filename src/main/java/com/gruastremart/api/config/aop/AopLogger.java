@@ -24,9 +24,8 @@ public class AopLogger {
     public void updateCraneDemandPointcut() {
     }
 
-    @Pointcut("execution(* com.gruastremart.api.controller.CraneDemandController.findWithFilters(..))")
-    public void findWithFiltersPointcut() {
-    }
+    @Pointcut("execution(* com.gruastremart.api.controller.CraneDemandController.handleOperatorLocation(..))")
+    public void handleOperatorLocationPointcut() {}
 
     private void logAuditInfo(RequestMetadataDto meta, String currentLocation, String destinationLocation) {
         log.info("AUDITORÍA - Fecha: {}, Usuario: {}, Rol: {}, Email: {}, IP: {}, User-Agent: {}, Ubicación actual: {}, Destino: {}",
@@ -51,15 +50,28 @@ public class AopLogger {
         logAuditInfo(meta, "N/A", "N/A");
     }
 
-    @Before("findWithFiltersPointcut()")
-    public void logGetWithFiltersAuditInfo(org.aspectj.lang.JoinPoint joinPoint) {
-        HttpServletRequest request = ((ServletRequestAttributes) org.springframework.web.context.request.RequestContextHolder.currentRequestAttributes()).getRequest();
-        RequestMetadataDto meta = RequestMetadataExtractorUtil.extract(request);
-        // Extraer parámetros lat y lng del endpoint
-        String lat = request.getParameter("lat");
-        String lng = request.getParameter("lng");
-        log.info("AUDITORÍA - Fecha: {}, Usuario: {}, Rol: {}, Email: {}, IP: {}, User-Agent: {}, Lat: {}, Lng: {}",
-                meta.getTimestamp(), meta.getUserId(), meta.getRole(), meta.getEmail(),
-                meta.getIp(), meta.getUserAgent(), lat, lng);
+    @Before("handleOperatorLocationPointcut()")
+    public void logHandleOperatorLocation(org.aspectj.lang.JoinPoint joinPoint) {
+        String craneDemandId = null;
+        String locationJson = null;
+        if (joinPoint.getArgs().length > 0) {
+            craneDemandId = String.valueOf(joinPoint.getArgs()[0]);
+        }
+        if (joinPoint.getArgs().length > 1) {
+            locationJson = String.valueOf(joinPoint.getArgs()[1]);
+        }
+        String lat = null;
+        String lng = null;
+        // Intentar extraer lat/lng del JSON si es posible
+        if (locationJson != null && locationJson.contains("lat") && locationJson.contains("lng")) {
+            try {
+                com.fasterxml.jackson.databind.JsonNode node = new com.fasterxml.jackson.databind.ObjectMapper().readTree(locationJson);
+                if (node.has("lat")) lat = node.get("lat").asText();
+                if (node.has("lng")) lng = node.get("lng").asText();
+            } catch (Exception e) {
+                log.warn("No se pudo parsear locationJson: {}", locationJson);
+            }
+        }
+        log.info("AUDITORÍA - handleOperatorLocation: craneDemandId={}, lat={}, lng={}", craneDemandId, lat, lng);
     }
 }

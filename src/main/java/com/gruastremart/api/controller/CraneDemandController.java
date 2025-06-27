@@ -100,7 +100,7 @@ public class CraneDemandController {
     @MessageMapping("/operator-location/{craneDemandId}")
     public void handleOperatorLocation(
             @DestinationVariable String craneDemandId,
-            @Payload String locationJson // Puede ser un String o un objeto, según tu frontend
+            @Payload String locationJson
     ) {
         craneDemandService.notifyOperatorLocation(craneDemandId, locationJson);
     }
