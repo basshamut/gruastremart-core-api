@@ -16,21 +16,25 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.MultiValueMap;
 
-import java.util.List;
 import java.util.Objects;
 
 @RequiredArgsConstructor
 @Repository
 public class CraneDemandCustomRepository {
+    public static final int DEFAULT_PAGE_VALUE = 0;
+    public static final int DEFAULT_SIZE_VALUE = 10;
+    public static final double DEFAULT_LATITUDE_VALUE = 0.0;
+    public static final double DEFAULT_LONGITUDE_VALUE = 0.0;
+    public static final double DEFAULT_RADIO_VALUE_IN_KM = 5.0;
     private final MongoTemplate mongoTemplate;
 
     public Page<CraneDemand> getWithFilters(MultiValueMap<String, String> params) {
 
-        var page = params.containsKey("page") ? Integer.parseInt(Objects.requireNonNull(params.getFirst("page"))) : 0; // Valor por defecto
-        var size = params.containsKey("size") ? Integer.parseInt(Objects.requireNonNull(params.getFirst("size"))) : 10; // Valor por defecto
-        var lat = params.containsKey("lat") ? Double.parseDouble(Objects.requireNonNull(params.getFirst("lat"))) : 0.0;
-        var lng = params.containsKey("lng") ? Double.parseDouble(Objects.requireNonNull(params.getFirst("lng"))) : 0.0;
-        var radio = params.containsKey("radio") ? Double.parseDouble(Objects.requireNonNull(params.getFirst("radio"))) : 0.0; // Radio por defecto (ej: 10 km)
+        var page = params.containsKey("page") ? Integer.parseInt(Objects.requireNonNull(params.getFirst("page"))) : DEFAULT_PAGE_VALUE;
+        var size = params.containsKey("size") ? Integer.parseInt(Objects.requireNonNull(params.getFirst("size"))) : DEFAULT_SIZE_VALUE;
+        var lat = params.containsKey("lat") ? Double.parseDouble(Objects.requireNonNull(params.getFirst("lat"))) : DEFAULT_LATITUDE_VALUE;
+        var lng = params.containsKey("lng") ? Double.parseDouble(Objects.requireNonNull(params.getFirst("lng"))) : DEFAULT_LONGITUDE_VALUE;
+        var radio = params.containsKey("radio") ? Double.parseDouble(Objects.requireNonNull(params.getFirst("radio"))) : DEFAULT_RADIO_VALUE_IN_KM;
         var pageable = Pageable.ofSize(size).withPage(page);
 
         var query = new Query();
@@ -43,9 +47,9 @@ public class CraneDemandCustomRepository {
             query.addCriteria(Criteria.where("createdByUserId").is(params.getFirst("createdByUserId")));
         }
 
-        if (lat != 0 && lng != 0 && radio != 0) {
+        if (lat != DEFAULT_PAGE_VALUE && lng != DEFAULT_PAGE_VALUE && radio != DEFAULT_PAGE_VALUE) {
             var punto = new Point(lng, lat); // GeoJSON usa (lng, lat)
-            var distancia = new Distance(radio / 1000.0, Metrics.KILOMETERS); // Mongo usa kilómetros
+            var distancia = new Distance(radio, Metrics.KILOMETERS);
 
             query.addCriteria(Criteria.where("currentLocation")
                     .nearSphere(punto)
@@ -56,7 +60,7 @@ public class CraneDemandCustomRepository {
         query.with(pageable);
 
         var demands = mongoTemplate.find(query, CraneDemand.class);
-        var count = mongoTemplate.count(query.skip(0).limit(0), CraneDemand.class);
+        var count = mongoTemplate.count(query.skip(DEFAULT_PAGE_VALUE).limit(DEFAULT_PAGE_VALUE), CraneDemand.class);
 
         return new PageImpl<>(demands, pageable, count);
     }
