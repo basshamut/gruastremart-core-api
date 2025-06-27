@@ -55,8 +55,11 @@ public class AopLogger {
     public void logGetWithFiltersAuditInfo(org.aspectj.lang.JoinPoint joinPoint) {
         HttpServletRequest request = ((ServletRequestAttributes) org.springframework.web.context.request.RequestContextHolder.currentRequestAttributes()).getRequest();
         RequestMetadataDto meta = RequestMetadataExtractorUtil.extract(request);
-        log.info("AUDITORÍA - Fecha: {}, Usuario: {}, Rol: {}, Email: {}, IP: {}, User-Agent: {}",
+        // Extraer parámetros lat y lng del endpoint
+        String lat = request.getParameter("lat");
+        String lng = request.getParameter("lng");
+        log.info("AUDITORÍA - Fecha: {}, Usuario: {}, Rol: {}, Email: {}, IP: {}, User-Agent: {}, Lat: {}, Lng: {}",
                 meta.getTimestamp(), meta.getUserId(), meta.getRole(), meta.getEmail(),
-                meta.getIp(), meta.getUserAgent());
+                meta.getIp(), meta.getUserAgent(), lat, lng);
     }
 }
