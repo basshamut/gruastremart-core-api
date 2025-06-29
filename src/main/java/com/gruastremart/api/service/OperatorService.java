@@ -20,7 +20,7 @@ public class OperatorService {
 
     @CachePut(value = OPERATOR_LOCATIONS_CACHE, key = "#operatorId", cacheManager = "operatorLocationsCacheManager")
     public OperatorLocationDto saveOperatorLocation(String operatorId, OperatorLocationRequestDto request) {
-        log.info("Guardando localización del operador: {}", operatorId);
+        log.debug("Guardando localización del operador: {}", operatorId);
 
         OperatorLocationDto location = OperatorLocationDto.builder()
                 .operatorId(operatorId)
@@ -30,7 +30,7 @@ public class OperatorService {
                 .timestamp(LocalDateTime.now())
                 .build();
 
-        log.info("Localización guardada en cache para operador: {} - Lat: {}, Lng: {}",
+        log.debug("Localización guardada en cache para operador: {} - Lat: {}, Lng: {}",
                 operatorId, location.getLatitude(), location.getLongitude());
 
         return location;
@@ -38,8 +38,8 @@ public class OperatorService {
 
     @Cacheable(value = OPERATOR_LOCATIONS_CACHE, key = "#operatorId", cacheManager = "operatorLocationsCacheManager")
     public Optional<OperatorLocationDto> getOperatorLocation(String operatorId) {
-        log.info("Buscando localización del operador en cache: {}", operatorId);
-        // Si no está en cache, retorna Optional.empty()
+        log.debug("Buscando localización del operador en cache: {}", operatorId);
+
         return Optional.empty();
     }
 

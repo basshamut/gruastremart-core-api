@@ -59,7 +59,7 @@ public class CraneDemandController {
             @Parameter(
                     name = "state",
                     description = "Filtrar por estado de la demanda",
-                    schema = @Schema(allowableValues = {"ACTIVE", "INACTIVE", "TAKEN", "COMPLETED"})
+                    schema = @Schema(allowableValues = {"ACTIVE", "INACTIVE", "TAKEN", "COMPLETED", "CANCELLED"})
             ),
             @Parameter(name = "createdByUserId", description = "ID del usuario que creó la demanda")
     })
