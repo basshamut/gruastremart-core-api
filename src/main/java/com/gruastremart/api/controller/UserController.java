@@ -9,6 +9,7 @@ import io.swagger.v3.oas.annotations.Parameters;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -32,6 +33,7 @@ import lombok.RequiredArgsConstructor;
 @RequestMapping(value = API_VERSION_PATH + "/users")
 @Validated
 @RequiredArgsConstructor
+@Tag(name = "User Management", description = "API para gestión de usuarios")
 public class UserController {
 
     private final UserService userService;

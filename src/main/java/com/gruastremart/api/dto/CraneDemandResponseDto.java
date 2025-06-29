@@ -17,6 +17,7 @@ public class CraneDemandResponseDto {
     private Date createdAt;
     private String state;
     private String userId;
+    private String assignedOperatorId;
     private String origin;
     private String carType;
     private String breakdown;

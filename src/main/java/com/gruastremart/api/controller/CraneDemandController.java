@@ -11,6 +11,7 @@ import io.swagger.v3.oas.annotations.Parameters;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -36,6 +37,7 @@ import static com.gruastremart.api.utils.constants.Constants.API_VERSION_PATH;
 @RestController
 @RequestMapping(value = API_VERSION_PATH + "/crane-demands")
 @RequiredArgsConstructor
+@Tag(name = "Crane Demand Management", description = "API para gestión de demandas de grúas")
 public class CraneDemandController {
 
     private final CraneDemandService craneDemandService;
@@ -95,13 +97,5 @@ public class CraneDemandController {
     public ResponseEntity<Void> cancelCraneDemand(@PathVariable String id) {
         craneDemandService.cancelCraneDemand(id);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-    }
-
-    @MessageMapping("/operator-location/{craneDemandId}")
-    public void handleOperatorLocation(
-            @DestinationVariable String craneDemandId,
-            @Payload String locationJson
-    ) {
-        craneDemandService.notifyOperatorLocation(craneDemandId, locationJson);
     }
 }

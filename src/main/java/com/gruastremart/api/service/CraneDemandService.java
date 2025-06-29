@@ -2,6 +2,7 @@ package com.gruastremart.api.service;
 
 import com.gruastremart.api.dto.CraneDemandCreateRequestDto;
 import com.gruastremart.api.dto.CraneDemandResponseDto;
+import com.gruastremart.api.dto.OperatorLocationRequestDto;
 import com.gruastremart.api.exception.ServiceException;
 import com.gruastremart.api.mapper.CraneDemandMapper;
 import com.gruastremart.api.persistance.entity.CraneDemand;
@@ -19,7 +20,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.util.MultiValueMap;
 
@@ -36,10 +36,8 @@ public class CraneDemandService {
     private final CraneDemandCustomRepository craneDemandCustomRepository;
     private final UserRepository userRepository;
     private final OperatorRepository operatorRepository;
-
     private final EmailService emailService;
-
-    private final SimpMessagingTemplate messagingTemplate;
+    private final OperatorService operatorService;
 
     public Page<CraneDemandResponseDto> findWithFilters(MultiValueMap<String, String> params) {
         if (PaginationUtil.isValidPagination(params.getFirst("page"), params.getFirst("size"))) {
@@ -74,8 +72,6 @@ public class CraneDemandService {
         var saved = craneDemandRepository.save(craneDemand);
         var response = CraneDemandMapper.MAPPER.mapToDto(saved);
 
-        notifyNewDemand(response);
-
         return response;
     }
 
@@ -85,11 +81,6 @@ public class CraneDemandService {
             throw new ServiceException("User already has an active or taken crane demand", 400);
         }
     }
-
-    private void notifyNewDemand(CraneDemandResponseDto dto) {
-        messagingTemplate.convertAndSend("/topic/new-demand", dto);
-    }
-
 
     private CraneDemand buildCraneDemandEntityForSave(CraneDemandCreateRequestDto craneDemandCreateRequestDto, String userId) {
         var craneDemandMapped = CraneDemandMapper.MAPPER.mapToEntity(craneDemandCreateRequestDto);
@@ -151,9 +142,39 @@ public class CraneDemandService {
         craneDemand.setState(CraneDemandStateEnum.TAKEN.name());
         craneDemand.setUpdatedAt(new Date());
         CraneDemand updated = craneDemandRepository.save(craneDemand);
+
+        // Cargar la información del operador en el cache de localización
+        initializeOperatorLocationInCache(operator.getId());
+
         emailService.sendResponseOfCraneDemandEmail(user.getName(), user.getEmail());
-        messagingTemplate.convertAndSend("/topic/demand-taken/" + craneDemand.getId(), CraneDemandMapper.MAPPER.mapToDto(updated));
         return updated;
+    }
+
+    /**
+     * Inicializa la localización del operador en cache con valores por defecto
+     * cuando se asigna a una demanda por primera vez
+     */
+    private void initializeOperatorLocationInCache(String operatorId) {
+        try {
+            // Verificar si el operador ya tiene localización en cache
+            if (!operatorService.isOperatorLocationCached(operatorId)) {
+                log.info("Inicializando localización en cache para operador: {}", operatorId);
+
+                // Crear una localización inicial con coordenadas por defecto
+                OperatorLocationRequestDto initialLocation = OperatorLocationRequestDto.builder()
+                        .latitude(0.0) // Coordenadas por defecto, se actualizarán cuando el operador envíe su ubicación real
+                        .longitude(0.0)
+                        .status("ASSIGNED") // Estado inicial cuando se asigna a una demanda
+                        .build();
+
+                operatorService.saveOperatorLocation(operatorId, initialLocation);
+                log.info("Localización inicial cargada en cache para operador: {}", operatorId);
+            } else {
+                log.info("Operador {} ya tiene localización en cache", operatorId);
+            }
+        } catch (Exception e) {
+            log.warn("Error al inicializar localización en cache para operador {}: {}", operatorId, e.getMessage());
+        }
     }
 
     public void cancelCraneDemand(String craneDemandId) {
@@ -163,16 +184,5 @@ public class CraneDemandService {
         }
         craneDemandEntity.get().setState(CraneDemandStateEnum.CANCELLED.name());
         craneDemandRepository.save(craneDemandEntity.get());
-    }
-
-    public void notifyOperatorLocation(String craneDemandId, String locationJson) {
-        if (craneDemandId == null || craneDemandId.isEmpty()) {
-            throw new ServiceException("Crane demand ID cannot be null or empty", HttpStatus.BAD_REQUEST.value());
-        }
-
-        log.info("Received operator location for crane demand ID: {}", craneDemandId);
-        log.debug("Location JSON: {}", locationJson);
-
-        messagingTemplate.convertAndSend("/topic/operator-location/" + craneDemandId, locationJson);
     }
 }

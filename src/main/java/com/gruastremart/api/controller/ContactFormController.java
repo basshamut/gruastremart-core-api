@@ -2,6 +2,7 @@ package com.gruastremart.api.controller;
 
 import com.gruastremart.api.dto.ContactFormCreateRequestDto;
 import com.gruastremart.api.dto.ContactFormResponseDto;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -13,6 +14,7 @@ import static com.gruastremart.api.utils.constants.Constants.API_VERSION_PATH;
 
 @RestController
 @RequestMapping(API_VERSION_PATH + "/contact-forms")
+@Tag(name = "Contact Form", description = "API para formularios de contacto")
 public class ContactFormController {
 
     //private final ContactFormService contactFormService;

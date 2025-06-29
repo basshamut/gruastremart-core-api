@@ -26,6 +26,7 @@ public interface CraneDemandMapper {
     CraneDemand mapToEntity(CraneDemandCreateRequestDto dto);
 
     @Mapping(target = "userId", ignore = true)
+    @Mapping(target = "assignedOperatorId", source = "entity.assignedOperatorId")
     @Mapping(source = "entity.createdAt", target = "createdAt", dateFormat = "dd/MM/yyyy")
     @Mapping(target = "currentLocation", expression = "java(mapToLocationDto(entity.getCurrentLocation(), entity.getCurrentLocationName(), entity.getCurrentLocationAccuracy()))")
     @Mapping(target = "destinationLocation", expression = "java(mapToLocationDto(entity.getDestinationLocation(), entity.getDestinationLocationName(), entity.getDestinationLocationAccuracy()))")

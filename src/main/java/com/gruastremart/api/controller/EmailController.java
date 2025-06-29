@@ -8,9 +8,11 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.gruastremart.api.dto.EmailRequestDto;
 import com.gruastremart.api.service.EmailService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 @RestController
 @RequestMapping("/v1/emails")
+@Tag(name = "Email Service", description = "API para envío de correos electrónicos")
 public class EmailController {
 
     private final EmailService emailService;
