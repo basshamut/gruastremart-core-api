@@ -14,6 +14,7 @@ import com.gruastremart.api.persistance.repository.custom.CraneDemandCustomRepos
 import com.gruastremart.api.utils.enums.CraneDemandStateEnum;
 import com.gruastremart.api.utils.tools.PaginationUtil;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -28,6 +29,7 @@ import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class CraneDemandService {
 
     private final CraneDemandRepository craneDemandRepository;
@@ -164,10 +166,13 @@ public class CraneDemandService {
     }
 
     public void notifyOperatorLocation(String craneDemandId, String locationJson) {
-        messagingTemplate.convertAndSend("/topic/operator-location/" + craneDemandId, locationJson);
-    }
+        if (craneDemandId == null || craneDemandId.isEmpty()) {
+            throw new ServiceException("Crane demand ID cannot be null or empty", HttpStatus.BAD_REQUEST.value());
+        }
 
-    public void broadcastOperatorLocation(String locationJson) {
-        messagingTemplate.convertAndSend("/topic/operator-location/broadcast", locationJson);
+        log.info("Received operator location for crane demand ID: {}", craneDemandId);
+        log.debug("Location JSON: {}", locationJson);
+
+        messagingTemplate.convertAndSend("/topic/operator-location/" + craneDemandId, locationJson);
     }
 }

@@ -24,9 +24,6 @@ public class AopLogger {
     public void updateCraneDemandPointcut() {
     }
 
-    @Pointcut("execution(* com.gruastremart.api.controller.CraneDemandController.broadcastOperatorLocation(..))")
-    public void broadcastOperatorLocationPointcut() {}
-
     private void logAuditInfo(RequestMetadataDto meta, String currentLocation, String destinationLocation) {
         log.info("AUDITORÍA - Fecha: {}, Usuario: {}, Rol: {}, Email: {}, IP: {}, User-Agent: {}, Ubicación actual: {}, Destino: {}",
                 meta.getTimestamp(), meta.getUserId(), meta.getRole(), meta.getEmail(),
@@ -48,26 +45,5 @@ public class AopLogger {
         RequestMetadataDto meta = RequestMetadataExtractorUtil.extract(request);
         CraneDemandAssignRequestDto craneDemandRequest = (CraneDemandAssignRequestDto) joinPoint.getArgs()[1];
         logAuditInfo(meta, "N/A", "N/A");
-    }
-
-    @Before("broadcastOperatorLocationPointcut()")
-    public void logBroadcastOperatorLocation(org.aspectj.lang.JoinPoint joinPoint) {
-        String locationJson = null;
-        if (joinPoint.getArgs().length > 0) {
-            locationJson = String.valueOf(joinPoint.getArgs()[0]);
-        }
-        String lat = null;
-        String lng = null;
-        // Intentar extraer lat/lng del JSON si es posible
-        if (locationJson != null && locationJson.contains("lat") && locationJson.contains("lng")) {
-            try {
-                com.fasterxml.jackson.databind.JsonNode node = new com.fasterxml.jackson.databind.ObjectMapper().readTree(locationJson);
-                if (node.has("lat")) lat = node.get("lat").asText();
-                if (node.has("lng")) lng = node.get("lng").asText();
-            } catch (Exception e) {
-                log.warn("No se pudo parsear locationJson: {}", locationJson);
-            }
-        }
-        log.info("AUDITORÍA - broadcastOperatorLocation: lat={}, lng={}", lat, lng);
     }
 }
