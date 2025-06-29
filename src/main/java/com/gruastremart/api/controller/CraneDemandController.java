@@ -106,7 +106,7 @@ public class CraneDemandController {
     }
 
     @MessageMapping("/operator-location/broadcast")
-    public void broadcastOperatorLocationCancel(
+    public void broadcastOperatorLocation(
             @Payload String locationJson
     ) {
         craneDemandService.broadcastOperatorLocation(locationJson);

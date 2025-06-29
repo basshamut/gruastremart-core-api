@@ -24,8 +24,8 @@ public class AopLogger {
     public void updateCraneDemandPointcut() {
     }
 
-    @Pointcut("execution(* com.gruastremart.api.controller.CraneDemandController.handleOperatorLocation(..))")
-    public void handleOperatorLocationPointcut() {}
+    @Pointcut("execution(* com.gruastremart.api.controller.CraneDemandController.broadcastOperatorLocation(..))")
+    public void broadcastOperatorLocationPointcut() {}
 
     private void logAuditInfo(RequestMetadataDto meta, String currentLocation, String destinationLocation) {
         log.info("AUDITORÍA - Fecha: {}, Usuario: {}, Rol: {}, Email: {}, IP: {}, User-Agent: {}, Ubicación actual: {}, Destino: {}",
@@ -50,15 +50,11 @@ public class AopLogger {
         logAuditInfo(meta, "N/A", "N/A");
     }
 
-    @Before("handleOperatorLocationPointcut()")
-    public void logHandleOperatorLocation(org.aspectj.lang.JoinPoint joinPoint) {
-        String craneDemandId = null;
+    @Before("broadcastOperatorLocationPointcut()")
+    public void logBroadcastOperatorLocation(org.aspectj.lang.JoinPoint joinPoint) {
         String locationJson = null;
         if (joinPoint.getArgs().length > 0) {
-            craneDemandId = String.valueOf(joinPoint.getArgs()[0]);
-        }
-        if (joinPoint.getArgs().length > 1) {
-            locationJson = String.valueOf(joinPoint.getArgs()[1]);
+            locationJson = String.valueOf(joinPoint.getArgs()[0]);
         }
         String lat = null;
         String lng = null;
@@ -72,6 +68,6 @@ public class AopLogger {
                 log.warn("No se pudo parsear locationJson: {}", locationJson);
             }
         }
-        log.info("AUDITORÍA - handleOperatorLocation: craneDemandId={}, lat={}, lng={}", craneDemandId, lat, lng);
+        log.info("AUDITORÍA - broadcastOperatorLocation: lat={}, lng={}", lat, lng);
     }
 }
