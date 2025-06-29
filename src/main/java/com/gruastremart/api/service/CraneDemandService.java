@@ -166,4 +166,8 @@ public class CraneDemandService {
     public void notifyOperatorLocation(String craneDemandId, String locationJson) {
         messagingTemplate.convertAndSend("/topic/operator-location/" + craneDemandId, locationJson);
     }
+
+    public void broadcastOperatorLocation(String locationJson) {
+        messagingTemplate.convertAndSend("/topic/operator-location/broadcast", locationJson);
+    }
 }
