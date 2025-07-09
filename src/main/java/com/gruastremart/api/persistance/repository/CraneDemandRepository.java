@@ -9,6 +9,4 @@ import java.util.List;
 @Repository
 public interface CraneDemandRepository extends MongoRepository<CraneDemand, String> {
     List<CraneDemand> findByCreatedByUserId(String id);
-
-    List<CraneDemand> findByState(String name);
 }

@@ -2,7 +2,7 @@ package com.gruastremart.api.controller.handler;
 
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
-import com.gruastremart.api.controller.handler.json.HttpErrorInfoJson;
+import com.gruastremart.api.dto.HttpErrorInfoDto;
 import com.gruastremart.api.exception.ServiceException;
 import com.gruastremart.api.utils.tools.FormatUtils;
 import org.springframework.http.HttpStatus;
@@ -19,36 +19,36 @@ public class GeneralControllerExceptionHandler {
 
     @ExceptionHandler(value = {Exception.class})
     @ResponseBody
-    public ResponseEntity<HttpErrorInfoJson> handleException(Exception exception, HttpServletRequest request) {
-        HttpErrorInfoJson httpErrorInfoJson = FormatUtils.httpErrorInfoFormatted(HttpStatus.INTERNAL_SERVER_ERROR, request, exception);
-        log.error(httpErrorInfoJson.toString());
+    public ResponseEntity<HttpErrorInfoDto> handleException(Exception exception, HttpServletRequest request) {
+        HttpErrorInfoDto httpErrorInfoDto = FormatUtils.httpErrorInfoFormatted(HttpStatus.INTERNAL_SERVER_ERROR, request, exception);
+        log.error(httpErrorInfoDto.toString());
         log.error(Arrays.toString(exception.getStackTrace()));
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(httpErrorInfoJson);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(httpErrorInfoDto);
     }
 
     @ExceptionHandler(value = {ServiceException.class})
     @ResponseBody
-    public ResponseEntity<HttpErrorInfoJson> handleServiceException(ServiceException serviceException, HttpServletRequest request) {
-        HttpErrorInfoJson httpErrorInfoJson;
+    public ResponseEntity<HttpErrorInfoDto> handleServiceException(ServiceException serviceException, HttpServletRequest request) {
+        HttpErrorInfoDto httpErrorInfoDto;
 
         switch (serviceException.getCode()) {
             case 400 -> {
-                httpErrorInfoJson = FormatUtils.httpErrorInfoFormatted(HttpStatus.BAD_REQUEST, request, serviceException);
-                log.error(httpErrorInfoJson.toString());
+                httpErrorInfoDto = FormatUtils.httpErrorInfoFormatted(HttpStatus.BAD_REQUEST, request, serviceException);
+                log.error(httpErrorInfoDto.toString());
                 log.error(Arrays.toString(serviceException.getStackTrace()));
-                return new ResponseEntity<>(httpErrorInfoJson, HttpStatus.BAD_REQUEST);
+                return new ResponseEntity<>(httpErrorInfoDto, HttpStatus.BAD_REQUEST);
             }
             case 404 -> {
-                httpErrorInfoJson = FormatUtils.httpErrorInfoFormatted(HttpStatus.NOT_FOUND, request, serviceException);
-                log.error(httpErrorInfoJson.toString());
+                httpErrorInfoDto = FormatUtils.httpErrorInfoFormatted(HttpStatus.NOT_FOUND, request, serviceException);
+                log.error(httpErrorInfoDto.toString());
                 log.error(Arrays.toString(serviceException.getStackTrace()));
-                return new ResponseEntity<>(httpErrorInfoJson, HttpStatus.NOT_FOUND);
+                return new ResponseEntity<>(httpErrorInfoDto, HttpStatus.NOT_FOUND);
             }
             default -> {
-                httpErrorInfoJson = FormatUtils.httpErrorInfoFormatted(HttpStatus.INTERNAL_SERVER_ERROR, request, serviceException);
-                log.error(httpErrorInfoJson.toString());
+                httpErrorInfoDto = FormatUtils.httpErrorInfoFormatted(HttpStatus.INTERNAL_SERVER_ERROR, request, serviceException);
+                log.error(httpErrorInfoDto.toString());
                 log.error(Arrays.toString(serviceException.getStackTrace()));
-                return new ResponseEntity<>(httpErrorInfoJson, HttpStatus.INTERNAL_SERVER_ERROR);
+                return new ResponseEntity<>(httpErrorInfoDto, HttpStatus.INTERNAL_SERVER_ERROR);
             }
         }
     }

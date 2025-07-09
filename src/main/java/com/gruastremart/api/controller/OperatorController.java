@@ -1,10 +1,11 @@
 package com.gruastremart.api.controller;
 
-import com.gruastremart.api.controller.handler.json.HttpErrorInfoJson;
+import com.gruastremart.api.dto.HttpErrorInfoDto;
 import com.gruastremart.api.dto.OperatorLocationDto;
 import com.gruastremart.api.dto.OperatorLocationRequestDto;
 import com.gruastremart.api.service.OperatorService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -30,43 +31,36 @@ import static com.gruastremart.api.utils.constants.Constants.API_VERSION_PATH;
 @RestController
 @RequestMapping(value = API_VERSION_PATH + "/operators")
 @RequiredArgsConstructor
-@Tag(name = "Operator Controller", description = "API para manejar datos de operadores")
+@Tag(name = "Operator Management", description = "API para gestión de operadores")
 public class OperatorController {
 
     private final OperatorService operatorService;
 
-    @Operation(summary = "Actualizar localización del operador",
-            description = "Guarda o actualiza las coordenadas de localización de un operador en cache")
-    @ApiResponse(responseCode = "200", description = "Localización actualizada correctamente",
-            content = @Content(mediaType = "application/json",
-                    schema = @Schema(implementation = OperatorLocationDto.class)))
-    @ApiResponse(responseCode = "400", description = "Datos de entrada inválidos",
-            content = @Content(mediaType = "application/json",
-                    schema = @Schema(implementation = HttpErrorInfoJson.class)))
-    @ApiResponse(responseCode = "401", description = "No autorizado",
-            content = @Content(mediaType = "application/json",
-                    schema = @Schema(implementation = HttpErrorInfoJson.class)))
+    @Operation(summary = "Update Operator Location", description = "Save or update the location coordinates of an operator in cache")
+    @ApiResponse(responseCode = "200", description = "OK", content = @Content(mediaType = "application/json", schema = @Schema(implementation = OperatorLocationDto.class)))
+    @ApiResponse(responseCode = "400", description = "BAD REQUEST", content = @Content(mediaType = "application/json", schema = @Schema(implementation = HttpErrorInfoDto.class)))
+    @ApiResponse(responseCode = "401", description = "UNAUTHORIZED", content = @Content(mediaType = "application/json", schema = @Schema(implementation = HttpErrorInfoDto.class)))
+    @ApiResponse(responseCode = "403", description = "FORBIDDEN", content = @Content(mediaType = "application/json", schema = @Schema(implementation = HttpErrorInfoDto.class)))
+    @ApiResponse(responseCode = "500", description = "INTERNAL SERVER ERROR", content = @Content(mediaType = "application/json", schema = @Schema(implementation = HttpErrorInfoDto.class)))
     @PutMapping("/{operatorId}/location")
     public ResponseEntity<OperatorLocationDto> updateOperatorLocation(
-            @PathVariable String operatorId,
-            @Valid @RequestBody OperatorLocationRequestDto request,
+            @Parameter(description = "Unique identifier of the operator", required = true) @PathVariable String operatorId,
+            @Parameter(description = "Location data to update", required = true) @Valid @RequestBody OperatorLocationRequestDto request,
             HttpServletRequest httpRequest) {
 
         OperatorLocationDto location = operatorService.saveOperatorLocation(operatorId, request);
         return new ResponseEntity<>(location, HttpStatus.OK);
     }
 
-    @Operation(summary = "Obtener localización del operador",
-            description = "Obtiene las coordenadas de localización de un operador desde cache")
-    @ApiResponse(responseCode = "200", description = "Localización encontrada",
-            content = @Content(mediaType = "application/json",
-                    schema = @Schema(implementation = OperatorLocationDto.class)))
-    @ApiResponse(responseCode = "404", description = "Localización no encontrada")
-    @ApiResponse(responseCode = "401", description = "No autorizado",
-            content = @Content(mediaType = "application/json",
-                    schema = @Schema(implementation = HttpErrorInfoJson.class)))
+    @Operation(summary = "Get Operator Location", description = "Retrieve the location coordinates of an operator from cache")
+    @ApiResponse(responseCode = "200", description = "OK", content = @Content(mediaType = "application/json", schema = @Schema(implementation = OperatorLocationDto.class)))
+    @ApiResponse(responseCode = "400", description = "BAD REQUEST", content = @Content(mediaType = "application/json", schema = @Schema(implementation = HttpErrorInfoDto.class)))
+    @ApiResponse(responseCode = "401", description = "UNAUTHORIZED", content = @Content(mediaType = "application/json", schema = @Schema(implementation = HttpErrorInfoDto.class)))
+    @ApiResponse(responseCode = "403", description = "FORBIDDEN", content = @Content(mediaType = "application/json", schema = @Schema(implementation = HttpErrorInfoDto.class)))
+    @ApiResponse(responseCode = "404", description = "NOT FOUND", content = @Content(mediaType = "application/json", schema = @Schema(implementation = HttpErrorInfoDto.class)))
+    @ApiResponse(responseCode = "500", description = "INTERNAL SERVER ERROR", content = @Content(mediaType = "application/json", schema = @Schema(implementation = HttpErrorInfoDto.class)))
     @GetMapping("/{operatorId}/location")
-    public ResponseEntity<OperatorLocationDto> getOperatorLocation(@PathVariable String operatorId) {
+    public ResponseEntity<OperatorLocationDto> getOperatorLocation(@Parameter(description = "Unique identifier of the operator", required = true) @PathVariable String operatorId) {
 
         Optional<OperatorLocationDto> location = operatorService.getOperatorLocation(operatorId);
 
@@ -74,11 +68,14 @@ public class OperatorController {
                 .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 
-    @Operation(summary = "Verificar si operador tiene localización",
-            description = "Verifica si un operador tiene localización guardada en cache")
-    @ApiResponse(responseCode = "200", description = "Estado verificado")
+    @Operation(summary = "Check Operator Location Status", description = "Verify if an operator has location data stored in cache")
+    @ApiResponse(responseCode = "200", description = "OK", content = @Content(mediaType = "application/json", schema = @Schema(implementation = Boolean.class)))
+    @ApiResponse(responseCode = "400", description = "BAD REQUEST", content = @Content(mediaType = "application/json", schema = @Schema(implementation = HttpErrorInfoDto.class)))
+    @ApiResponse(responseCode = "401", description = "UNAUTHORIZED", content = @Content(mediaType = "application/json", schema = @Schema(implementation = HttpErrorInfoDto.class)))
+    @ApiResponse(responseCode = "403", description = "FORBIDDEN", content = @Content(mediaType = "application/json", schema = @Schema(implementation = HttpErrorInfoDto.class)))
+    @ApiResponse(responseCode = "500", description = "INTERNAL SERVER ERROR", content = @Content(mediaType = "application/json", schema = @Schema(implementation = HttpErrorInfoDto.class)))
     @GetMapping("/{operatorId}/location/status")
-    public ResponseEntity<Boolean> checkOperatorLocationStatus(@PathVariable String operatorId) {
+    public ResponseEntity<Boolean> checkOperatorLocationStatus(@Parameter(description = "Unique identifier of the operator", required = true) @PathVariable String operatorId) {
 
         boolean hasLocation = operatorService.isOperatorLocationCached(operatorId);
 
