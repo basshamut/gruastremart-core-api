@@ -17,6 +17,9 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.MultiValueMap;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.Objects;
 
 @RequiredArgsConstructor
@@ -58,6 +61,29 @@ public class CraneDemandCustomRepository {
                     .maxDistance(distancia.getNormalizedValue()));
         }
 
+        // Filtros por rango de fechas
+        if (params.containsKey("startDate") || params.containsKey("endDate")) {
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+            try {
+                if (params.containsKey("startDate")) {
+                    String startDateStr = params.getFirst("startDate");
+                    if (startDateStr != null && !startDateStr.trim().isEmpty()) {
+                        LocalDate startDate = LocalDate.parse(startDateStr, formatter);
+                        query.addCriteria(Criteria.where("createdAt").gte(startDate.atStartOfDay()));
+                    }
+                }
+                if (params.containsKey("endDate")) {
+                    String endDateStr = params.getFirst("endDate");
+                    if (endDateStr != null && !endDateStr.trim().isEmpty()) {
+                        LocalDate endDate = LocalDate.parse(endDateStr, formatter);
+                        query.addCriteria(Criteria.where("createdAt").lte(endDate.atTime(23, 59, 59)));
+                    }
+                }
+            } catch (DateTimeParseException e) {
+                throw new IllegalArgumentException("Invalid date format. Use 'yyyy-MM-dd'.", e);
+            }
+        }
+
         query.with(Sort.by(Sort.Direction.DESC, "createdAt"));
         query.with(pageable);
 
@@ -67,3 +93,4 @@ public class CraneDemandCustomRepository {
         return new PageImpl<>(demands, pageable, count);
     }
 }
+
