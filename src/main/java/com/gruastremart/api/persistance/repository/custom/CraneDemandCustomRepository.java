@@ -65,20 +65,25 @@ public class CraneDemandCustomRepository {
         if (params.containsKey("startDate") || params.containsKey("endDate")) {
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
             try {
+                Criteria dateCriteria = Criteria.where("createdAt");
+
                 if (params.containsKey("startDate")) {
                     String startDateStr = params.getFirst("startDate");
                     if (startDateStr != null && !startDateStr.trim().isEmpty()) {
                         LocalDate startDate = LocalDate.parse(startDateStr, formatter);
-                        query.addCriteria(Criteria.where("createdAt").gte(startDate.atStartOfDay()));
+                        dateCriteria = dateCriteria.gte(startDate.atStartOfDay());
                     }
                 }
+
                 if (params.containsKey("endDate")) {
                     String endDateStr = params.getFirst("endDate");
                     if (endDateStr != null && !endDateStr.trim().isEmpty()) {
                         LocalDate endDate = LocalDate.parse(endDateStr, formatter);
-                        query.addCriteria(Criteria.where("createdAt").lte(endDate.atTime(23, 59, 59)));
+                        dateCriteria = dateCriteria.lte(endDate.atTime(23, 59, 59));
                     }
                 }
+
+                query.addCriteria(dateCriteria);
             } catch (DateTimeParseException e) {
                 throw new IllegalArgumentException("Invalid date format. Use 'yyyy-MM-dd'.", e);
             }
