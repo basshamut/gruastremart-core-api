@@ -1,6 +1,7 @@
 package com.gruastremart.api.controller;
 
 import com.gruastremart.api.dto.HttpErrorInfoDto;
+import com.gruastremart.api.dto.OperatorDto;
 import com.gruastremart.api.dto.OperatorLocationDto;
 import com.gruastremart.api.dto.OperatorLocationRequestDto;
 import com.gruastremart.api.service.OperatorService;
@@ -21,6 +22,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Optional;
@@ -35,6 +37,18 @@ import static com.gruastremart.api.utils.constants.Constants.API_VERSION_PATH;
 public class OperatorController {
 
     private final OperatorService operatorService;
+
+    @Operation(summary = "Get Operator by User ID", description = "Retrieve operator information using the user ID")
+    @ApiResponse(responseCode = "200", description = "OK", content = @Content(mediaType = "application/json", schema = @Schema(implementation = OperatorDto.class)))
+    @ApiResponse(responseCode = "400", description = "BAD REQUEST", content = @Content(mediaType = "application/json", schema = @Schema(implementation = HttpErrorInfoDto.class)))
+    @ApiResponse(responseCode = "401", description = "UNAUTHORIZED", content = @Content(mediaType = "application/json", schema = @Schema(implementation = HttpErrorInfoDto.class)))
+    @ApiResponse(responseCode = "403", description = "FORBIDDEN", content = @Content(mediaType = "application/json", schema = @Schema(implementation = HttpErrorInfoDto.class)))
+    @ApiResponse(responseCode = "404", description = "NOT FOUND", content = @Content(mediaType = "application/json", schema = @Schema(implementation = HttpErrorInfoDto.class)))
+    @ApiResponse(responseCode = "500", description = "INTERNAL SERVER ERROR", content = @Content(mediaType = "application/json", schema = @Schema(implementation = HttpErrorInfoDto.class)))
+    @GetMapping
+    public OperatorDto findOperatorByUserId(@RequestParam(required = true) @Parameter(description = "Unique identifier of the user", required = true) String userId) {
+        return operatorService.findByUserId(userId);
+    }
 
     @Operation(summary = "Update Operator Location", description = "Save or update the location coordinates of an operator in cache")
     @ApiResponse(responseCode = "200", description = "OK", content = @Content(mediaType = "application/json", schema = @Schema(implementation = OperatorLocationDto.class)))

@@ -2,11 +2,12 @@ package com.gruastremart.api.service;
 
 import com.gruastremart.api.dto.CraneDemandCreateRequestDto;
 import com.gruastremart.api.dto.CraneDemandResponseDto;
+import com.gruastremart.api.dto.OperatorDto;
 import com.gruastremart.api.dto.OperatorLocationRequestDto;
 import com.gruastremart.api.exception.ServiceException;
 import com.gruastremart.api.mapper.CraneDemandMapper;
 import com.gruastremart.api.persistance.entity.CraneDemand;
-import com.gruastremart.api.persistance.entity.CraneOperator;
+import com.gruastremart.api.persistance.entity.Operator;
 import com.gruastremart.api.persistance.entity.User;
 import com.gruastremart.api.persistance.repository.CraneDemandRepository;
 import com.gruastremart.api.persistance.repository.OperatorRepository;
@@ -35,7 +36,6 @@ public class CraneDemandService {
     private final CraneDemandRepository craneDemandRepository;
     private final CraneDemandCustomRepository craneDemandCustomRepository;
     private final UserRepository userRepository;
-    private final OperatorRepository operatorRepository;
     private final EmailService emailService;
     private final OperatorService operatorService;
 
@@ -94,7 +94,7 @@ public class CraneDemandService {
         var craneDemand = getCreaneDemandById(craneDemandId);
         var userThatCreatedDemand = getUserById(craneDemand.getCreatedByUserId());
         var userThatTakeDemand = getUserByEmail(userEmail);
-        var userAsOperator = getOperatorByUserId(userThatTakeDemand.getId());
+        var userAsOperator = operatorService.findByUserId(userThatTakeDemand.getId());
 
         CraneDemand updated = updateCraneDemandWithOperatorInformation(craneDemand, userThatCreatedDemand, userAsOperator);
 
@@ -127,16 +127,7 @@ public class CraneDemandService {
         return user.get();
     }
 
-    private CraneOperator getOperatorByUserId(String userId) {
-        var operator = operatorRepository.findByUserId(userId);
-        if (operator.isEmpty()) {
-            throw new ServiceException("Operator not found", 404);
-        }
-
-        return operator.get();
-    }
-
-    private CraneDemand updateCraneDemandWithOperatorInformation(CraneDemand craneDemand, User user, CraneOperator operator) {
+    private CraneDemand updateCraneDemandWithOperatorInformation(CraneDemand craneDemand, User user, OperatorDto operator) {
         craneDemand.setEditedByUserId(user.getId());
         craneDemand.setAssignedOperatorId(operator.getId());
         craneDemand.setState(CraneDemandStateEnum.TAKEN.name());

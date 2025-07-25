@@ -1,7 +1,11 @@
 package com.gruastremart.api.service;
 
+import com.gruastremart.api.dto.OperatorDto;
 import com.gruastremart.api.dto.OperatorLocationDto;
 import com.gruastremart.api.dto.OperatorLocationRequestDto;
+import com.gruastremart.api.exception.ServiceException;
+import com.gruastremart.api.mapper.OperatorMapper;
+import com.gruastremart.api.persistance.repository.OperatorRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CachePut;
@@ -17,6 +21,8 @@ import static com.gruastremart.api.utils.constants.Constants.OPERATOR_LOCATIONS_
 @Service
 @RequiredArgsConstructor
 public class OperatorService {
+
+    private final OperatorRepository operatorRepository;
 
     @CachePut(value = OPERATOR_LOCATIONS_CACHE, key = "#operatorId", cacheManager = "operatorLocationsCacheManager")
     public OperatorLocationDto saveOperatorLocation(String operatorId, OperatorLocationRequestDto request) {
@@ -45,5 +51,10 @@ public class OperatorService {
 
     public boolean isOperatorLocationCached(String operatorId) {
         return getOperatorLocation(operatorId).isPresent();
+    }
+
+    public OperatorDto findByUserId(String userId) {
+        var operator = operatorRepository.findByUserId(userId).orElseThrow(() -> new ServiceException("User not found", 404));
+        return OperatorMapper.MAPPER.mapToDto(operator);
     }
 }
