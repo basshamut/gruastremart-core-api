@@ -53,7 +53,8 @@ public class UserController {
                     name = "role",
                     description = "Filtrar por tipo de cuenta",
                     schema = @Schema(allowableValues = {"ADMIN", "CLIENT", "OPERATOR"})
-            )
+            ),
+            @Parameter(name = "active", description = "Filtrar por estado activo")
     })
     public ResponseEntity<Page<UserDto>> findWithFilters(@Parameter(description = "Query parameters for filtering users") @RequestParam(required = false) MultiValueMap<String, String> params) {
         var users = userService.findWithFilters(params);
