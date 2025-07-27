@@ -122,11 +122,23 @@ class CraneDemandControllerTest {
             CraneDemandCreateRequestDto craneDemandRequest = new CraneDemandCreateRequestDto();
             craneDemandRequest.setCurrentLocation(LocationDto.builder().latitude(10.0).longitude(20.0).build());
             craneDemandRequest.setDestinationLocation(LocationDto.builder().latitude(30.0).longitude(40.0).build());
+            // Vehicle information
+            craneDemandRequest.setVehicleBrand("Ford");
+            craneDemandRequest.setVehicleModel("Ecosport");
+            craneDemandRequest.setVehicleYear(2006);
+            craneDemandRequest.setVehiclePlate("A00A49G");
+            craneDemandRequest.setVehicleColor("Gris");
 
             CraneDemandResponseDto createdResponse = new CraneDemandResponseDto();
             createdResponse.setId("1");
             createdResponse.setCurrentLocation(LocationDto.builder().latitude(10.0).longitude(20.0).build());
             createdResponse.setDestinationLocation(LocationDto.builder().latitude(30.0).longitude(40.0).build());
+            // Vehicle information in response
+            createdResponse.setVehicleBrand("Ford");
+            createdResponse.setVehicleModel("Ecosport");
+            createdResponse.setVehicleYear(2006);
+            createdResponse.setVehiclePlate("A00A49G");
+            createdResponse.setVehicleColor("Gris");
 
             Mockito.when(craneDemandService.createCraneDemand(any(), any())).thenReturn(createdResponse);
 
@@ -137,6 +149,11 @@ class CraneDemandControllerTest {
             assertEquals(HttpStatus.CREATED, result.getStatusCode());
             assertNotNull(result.getBody());
             assertEquals(craneDemandRequest.getCurrentLocation(), result.getBody().getCurrentLocation());
+            assertEquals("Ford", result.getBody().getVehicleBrand());
+            assertEquals("Ecosport", result.getBody().getVehicleModel());
+            assertEquals(2006, result.getBody().getVehicleYear());
+            assertEquals("A00A49G", result.getBody().getVehiclePlate());
+            assertEquals("Gris", result.getBody().getVehicleColor());
         }
     }
 

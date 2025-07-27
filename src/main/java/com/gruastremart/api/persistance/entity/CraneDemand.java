@@ -32,6 +32,14 @@ public class CraneDemand {
     private String breakdown;
     private String referenceSource;
     private String recommendedBy;
+
+    // Vehicle information
+    private String vehicleBrand;
+    private String vehicleModel;
+    private Integer vehicleYear;
+    private String vehiclePlate;
+    private String vehicleColor;
+
     @GeoSpatialIndexed
     private GeoJsonPoint currentLocation;
     private String currentLocationName;

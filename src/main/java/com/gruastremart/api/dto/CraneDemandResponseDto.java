@@ -23,6 +23,14 @@ public class CraneDemandResponseDto {
     private String breakdown;
     private String referenceSource;
     private String recommendedBy;
+
+    // Vehicle information
+    private String vehicleBrand;
+    private String vehicleModel;
+    private Integer vehicleYear;
+    private String vehiclePlate;
+    private String vehicleColor;
+
     private LocationDto currentLocation;
     private LocationDto destinationLocation;
 }
