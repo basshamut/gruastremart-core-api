@@ -8,6 +8,7 @@ import com.gruastremart.api.dto.RequestMetadataDto;
 import com.gruastremart.api.exception.ServiceException;
 import com.gruastremart.api.service.CraneDemandService;
 import com.gruastremart.api.utils.tools.RequestMetadataExtractorUtil;
+import com.gruastremart.api.utils.enums.WeightCategoryEnum;
 import jakarta.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -181,10 +182,10 @@ class CraneDemandControllerTest {
                     .longitude(20.0)
                     .build());
 
-            Mockito.when(craneDemandService.assignCraneDemand(eq("1"), any())).thenReturn(Optional.of(updatedResponse));
+            Mockito.when(craneDemandService.assignCraneDemand(eq("1"), any(), eq("peso_1"))).thenReturn(Optional.of(updatedResponse));
 
             // Act
-            ResponseEntity<CraneDemandResponseDto> result = craneDemandController.assignCraneDemand("1", mockHttpServletRequest);
+            ResponseEntity<CraneDemandResponseDto> result = craneDemandController.assignCraneDemand("1", WeightCategoryEnum.PESO_1, mockHttpServletRequest);
 
             // Assert
             assertEquals(HttpStatus.OK, result.getStatusCode());
@@ -209,12 +210,12 @@ class CraneDemandControllerTest {
         try (MockedStatic<RequestMetadataExtractorUtil> mockedStatic = Mockito.mockStatic(RequestMetadataExtractorUtil.class)) {
             mockedStatic.when(() -> RequestMetadataExtractorUtil.extract(any(HttpServletRequest.class)))
                     .thenReturn(mockMetadata);
-            Mockito.when(craneDemandService.assignCraneDemand(anyString(), any()))
+            Mockito.when(craneDemandService.assignCraneDemand(anyString(), any(), anyString()))
                     .thenThrow(new ServiceException("Crane request not found", 404));
 
             // Act & Assert
             ServiceException exception = assertThrows(ServiceException.class, () -> {
-                craneDemandController.assignCraneDemand("invalid-id", mockHttpServletRequest);
+                craneDemandController.assignCraneDemand("invalid-id", WeightCategoryEnum.PESO_1, mockHttpServletRequest);
             });
 
             // Verificar el mensaje de la excepción

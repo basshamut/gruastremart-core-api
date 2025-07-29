@@ -31,6 +31,9 @@ public class CraneDemandResponseDto {
     private String vehiclePlate;
     private String vehicleColor;
 
+    // Pricing information
+    private String assignedWeightCategoryId;
+
     private LocationDto currentLocation;
     private LocationDto destinationLocation;
 }

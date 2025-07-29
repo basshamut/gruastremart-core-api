@@ -70,9 +70,8 @@ public class CraneDemandService {
 
         var craneDemand = buildCraneDemandEntityForSave(dto, user.getId());
         var saved = craneDemandRepository.save(craneDemand);
-        var response = CraneDemandMapper.MAPPER.mapToDto(saved);
 
-        return response;
+        return CraneDemandMapper.MAPPER.mapToDto(saved);
     }
 
     private void validateUserHasNoActiveDemand(String userId) {
@@ -90,13 +89,12 @@ public class CraneDemandService {
         return craneDemandMapped;
     }
 
-    public Optional<CraneDemandResponseDto> assignCraneDemand(String craneDemandId, String userEmail) {
+    public Optional<CraneDemandResponseDto> assignCraneDemand(String craneDemandId, String userEmail, String weightCategoryId) {
         var craneDemand = getCreaneDemandById(craneDemandId);
         var userThatCreatedDemand = getUserById(craneDemand.getCreatedByUserId());
         var userThatTakeDemand = getUserByEmail(userEmail);
         var userAsOperator = operatorService.findByUserId(userThatTakeDemand.getId());
-
-        CraneDemand updated = updateCraneDemandWithOperatorInformation(craneDemand, userThatCreatedDemand, userAsOperator);
+        var updated = updateCraneDemandWithOperatorInformation(craneDemand, userThatCreatedDemand, userAsOperator, weightCategoryId);
 
         return Optional.of(CraneDemandMapper.MAPPER.mapToDto(updated));
     }
@@ -127,9 +125,10 @@ public class CraneDemandService {
         return user.get();
     }
 
-    private CraneDemand updateCraneDemandWithOperatorInformation(CraneDemand craneDemand, User user, OperatorDto operator) {
+    private CraneDemand updateCraneDemandWithOperatorInformation(CraneDemand craneDemand, User user, OperatorDto operator, String weightCategoryId) {
         craneDemand.setEditedByUserId(user.getId());
         craneDemand.setAssignedOperatorId(operator.getId());
+        craneDemand.setAssignedWeightCategoryId(weightCategoryId);
         craneDemand.setState(CraneDemandStateEnum.TAKEN.name());
         craneDemand.setUpdatedAt(new Date());
         CraneDemand updated = craneDemandRepository.save(craneDemand);
@@ -171,9 +170,13 @@ public class CraneDemandService {
     public void cancelCraneDemand(String craneDemandId) {
         var craneDemandEntity = craneDemandRepository.findById(craneDemandId);
         if (craneDemandEntity.isEmpty()) {
-            throw new ServiceException("User not found", 404);
+            throw new ServiceException("Crane demand not found", 404);
         }
-        craneDemandEntity.get().setState(CraneDemandStateEnum.CANCELLED.name());
-        craneDemandRepository.save(craneDemandEntity.get());
+
+        var demand = craneDemandEntity.get();
+        demand.setState(CraneDemandStateEnum.CANCELLED.name());
+        demand.setUpdatedAt(new Date());
+        craneDemandRepository.save(demand);
     }
 }
+

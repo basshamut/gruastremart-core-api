@@ -61,7 +61,6 @@ public class CraneDemandCustomRepository {
                     .maxDistance(distancia.getNormalizedValue()));
         }
 
-        // Filtros por rango de fechas
         if (params.containsKey("startDate") || params.containsKey("endDate")) {
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
             try {

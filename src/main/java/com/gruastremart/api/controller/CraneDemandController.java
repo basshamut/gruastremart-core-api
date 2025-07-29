@@ -4,6 +4,7 @@ import com.gruastremart.api.dto.HttpErrorInfoDto;
 import com.gruastremart.api.dto.CraneDemandCreateRequestDto;
 import com.gruastremart.api.dto.CraneDemandResponseDto;
 import com.gruastremart.api.service.CraneDemandService;
+import com.gruastremart.api.utils.enums.WeightCategoryEnum;
 import com.gruastremart.api.utils.tools.RequestMetadataExtractorUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -104,7 +105,7 @@ public class CraneDemandController {
         return new ResponseEntity<>(created, HttpStatus.CREATED);
     }
 
-    @Operation(summary = "Assign Crane Demand", description = "Assign a crane demand to the current user")
+    @Operation(summary = "Assign Crane Demand", description = "Assign a crane demand to the current user with weight category")
     @ApiResponse(responseCode = "200", description = "OK", content = @Content(mediaType = "application/json", schema = @Schema(implementation = CraneDemandResponseDto.class)))
     @ApiResponse(responseCode = "400", description = "BAD REQUEST", content = @Content(mediaType = "application/json", schema = @Schema(implementation = HttpErrorInfoDto.class)))
     @ApiResponse(responseCode = "401", description = "UNAUTHORIZED", content = @Content(mediaType = "application/json", schema = @Schema(implementation = HttpErrorInfoDto.class)))
@@ -112,9 +113,15 @@ public class CraneDemandController {
     @ApiResponse(responseCode = "404", description = "NOT FOUND", content = @Content(mediaType = "application/json", schema = @Schema(implementation = HttpErrorInfoDto.class)))
     @ApiResponse(responseCode = "500", description = "INTERNAL SERVER ERROR", content = @Content(mediaType = "application/json", schema = @Schema(implementation = HttpErrorInfoDto.class)))
     @PatchMapping("/{craneDemandId}/assign")
-    public ResponseEntity<CraneDemandResponseDto> assignCraneDemand(@Parameter(description = "Unique identifier of the crane demand to assign", required = true) @PathVariable String craneDemandId, HttpServletRequest request) {
+    public ResponseEntity<CraneDemandResponseDto> assignCraneDemand(
+            @Parameter(description = "Unique identifier of the crane demand to assign", required = true)
+            @PathVariable String craneDemandId,
+            @Parameter(description = "Weight category for the crane service", required = true,
+                    schema = @Schema(allowableValues = {"PESO_1", "PESO_2", "PESO_3", "PESO_4"}))
+            @RequestParam WeightCategoryEnum weightCategory,
+            HttpServletRequest request) {
         var meta = RequestMetadataExtractorUtil.extract(request);
-        var updated = craneDemandService.assignCraneDemand(craneDemandId, meta.getEmail());
+        var updated = craneDemandService.assignCraneDemand(craneDemandId, meta.getEmail(), weightCategory.getId());
 
         return updated.map(value -> new ResponseEntity<>(value, HttpStatus.OK))
                 .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));

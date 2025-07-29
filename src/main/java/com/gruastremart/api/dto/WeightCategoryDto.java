@@ -9,6 +9,9 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class CraneDemandAssignRequestDto {
-    private String weightCategoryId;
+public class WeightCategoryDto {
+    private String name;
+    private Integer minWeightKg;
+    private Integer maxWeightKg;
+    private String description;
 }
