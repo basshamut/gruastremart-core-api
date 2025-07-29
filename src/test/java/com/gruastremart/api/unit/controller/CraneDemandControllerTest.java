@@ -1,6 +1,7 @@
 package com.gruastremart.api.unit.controller;
 
 import com.gruastremart.api.controller.CraneDemandController;
+import com.gruastremart.api.dto.AssignCraneDemandDto;
 import com.gruastremart.api.dto.CraneDemandCreateRequestDto;
 import com.gruastremart.api.dto.CraneDemandResponseDto;
 import com.gruastremart.api.dto.LocationDto;
@@ -161,68 +162,50 @@ class CraneDemandControllerTest {
     @Test
     void testAssignCraneDemand() {
         // Arrange
-        HttpServletRequest mockHttpServletRequest = Mockito.mock(HttpServletRequest.class);
-        RequestMetadataDto mockMetadata = RequestMetadataDto.builder()
+        AssignCraneDemandDto assignCraneDemandDto = AssignCraneDemandDto.builder()
                 .userId("user123")
-                .email("user@example.com")
-                .role("admin")
-                .ip("192.168.1.1")
-                .userAgent("Mozilla/5.0")
-                .timestamp(LocalDateTime.now())
+                .weightCategory(WeightCategoryEnum.PESO_1)
+                .latitude(10.0)
+                .longitude(20.0)
                 .build();
 
-        try (MockedStatic<RequestMetadataExtractorUtil> mockedStatic = Mockito.mockStatic(RequestMetadataExtractorUtil.class)) {
-            mockedStatic.when(() -> RequestMetadataExtractorUtil.extract(any(HttpServletRequest.class)))
-                    .thenReturn(mockMetadata);
+        CraneDemandResponseDto updatedResponse = new CraneDemandResponseDto();
+        updatedResponse.setId("1");
+        updatedResponse.setCurrentLocation(LocationDto.builder()
+                .latitude(10.0)
+                .longitude(20.0)
+                .build());
 
-            CraneDemandResponseDto updatedResponse = new CraneDemandResponseDto();
-            updatedResponse.setId("1");
-            updatedResponse.setCurrentLocation(LocationDto.builder()
-                    .latitude(10.0)
-                    .longitude(20.0)
-                    .build());
+        Mockito.when(craneDemandService.assignCraneDemand(eq("1"), any(AssignCraneDemandDto.class))).thenReturn(Optional.of(updatedResponse));
 
-            Mockito.when(craneDemandService.assignCraneDemand(eq("1"), any(), eq("peso_1"))).thenReturn(Optional.of(updatedResponse));
+        // Act
+        ResponseEntity<CraneDemandResponseDto> result = craneDemandController.assignCraneDemand("1", assignCraneDemandDto);
 
-            // Act
-            ResponseEntity<CraneDemandResponseDto> result = craneDemandController.assignCraneDemand("1", WeightCategoryEnum.PESO_1, mockHttpServletRequest);
-
-            // Assert
-            assertEquals(HttpStatus.OK, result.getStatusCode());
-            assertNotNull(result.getBody());
-            assertEquals(updatedResponse.getCurrentLocation(), result.getBody().getCurrentLocation());
-            assertEquals(updatedResponse.getCurrentLocation(), result.getBody().getCurrentLocation());
-        }
+        // Assert
+        assertEquals(HttpStatus.OK, result.getStatusCode());
+        assertNotNull(result.getBody());
+        assertEquals(updatedResponse.getCurrentLocation(), result.getBody().getCurrentLocation());
     }
 
     @Test
     void testAssignCraneDemandNotFound() {
         // Arrange
-        HttpServletRequest mockHttpServletRequest = Mockito.mock(HttpServletRequest.class);
-        RequestMetadataDto mockMetadata = RequestMetadataDto.builder()
+        AssignCraneDemandDto assignCraneDemandDto = AssignCraneDemandDto.builder()
                 .userId("user123")
-                .email("user@example.com")
-                .role("admin")
-                .ip("192.168.1.1")
-                .userAgent("Mozilla/5.0")
-                .timestamp(LocalDateTime.now())
+                .weightCategory(WeightCategoryEnum.PESO_1)
+                .latitude(10.0)
+                .longitude(20.0)
                 .build();
-        try (MockedStatic<RequestMetadataExtractorUtil> mockedStatic = Mockito.mockStatic(RequestMetadataExtractorUtil.class)) {
-            mockedStatic.when(() -> RequestMetadataExtractorUtil.extract(any(HttpServletRequest.class)))
-                    .thenReturn(mockMetadata);
-            Mockito.when(craneDemandService.assignCraneDemand(anyString(), any(), anyString()))
-                    .thenThrow(new ServiceException("Crane request not found", 404));
 
-            // Act & Assert
-            ServiceException exception = assertThrows(ServiceException.class, () -> {
-                craneDemandController.assignCraneDemand("invalid-id", WeightCategoryEnum.PESO_1, mockHttpServletRequest);
-            });
+        Mockito.when(craneDemandService.assignCraneDemand(anyString(), any(AssignCraneDemandDto.class)))
+                .thenReturn(Optional.empty());
 
-            // Verificar el mensaje de la excepción
-            assertEquals("Crane request not found", exception.getMessage());
-        }
+        // Act
+        ResponseEntity<CraneDemandResponseDto> result = craneDemandController.assignCraneDemand("invalid-id", assignCraneDemandDto);
+
+        // Assert
+        assertEquals(HttpStatus.NOT_FOUND, result.getStatusCode());
     }
-
 
     @Test
     void testCancelCraneDemand() {

@@ -1,5 +1,6 @@
 package com.gruastremart.api.controller;
 
+import com.gruastremart.api.dto.AssignCraneDemandDto;
 import com.gruastremart.api.dto.HttpErrorInfoDto;
 import com.gruastremart.api.dto.CraneDemandCreateRequestDto;
 import com.gruastremart.api.dto.CraneDemandResponseDto;
@@ -116,12 +117,8 @@ public class CraneDemandController {
     public ResponseEntity<CraneDemandResponseDto> assignCraneDemand(
             @Parameter(description = "Unique identifier of the crane demand to assign", required = true)
             @PathVariable String craneDemandId,
-            @Parameter(description = "Weight category for the crane service", required = true,
-                    schema = @Schema(allowableValues = {"PESO_1", "PESO_2", "PESO_3", "PESO_4"}))
-            @RequestParam WeightCategoryEnum weightCategory,
-            HttpServletRequest request) {
-        var meta = RequestMetadataExtractorUtil.extract(request);
-        var updated = craneDemandService.assignCraneDemand(craneDemandId, meta.getEmail(), weightCategory.getId());
+            @RequestBody AssignCraneDemandDto assignCraneDemandDto) {
+        var updated = craneDemandService.assignCraneDemand(craneDemandId, assignCraneDemandDto);
 
         return updated.map(value -> new ResponseEntity<>(value, HttpStatus.OK))
                 .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));

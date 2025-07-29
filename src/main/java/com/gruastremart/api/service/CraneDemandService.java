@@ -1,5 +1,6 @@
 package com.gruastremart.api.service;
 
+import com.gruastremart.api.dto.AssignCraneDemandDto;
 import com.gruastremart.api.dto.CraneDemandCreateRequestDto;
 import com.gruastremart.api.dto.CraneDemandResponseDto;
 import com.gruastremart.api.dto.OperatorDto;
@@ -89,14 +90,20 @@ public class CraneDemandService {
         return craneDemandMapped;
     }
 
-    public Optional<CraneDemandResponseDto> assignCraneDemand(String craneDemandId, String userEmail, String weightCategoryId) {
+    public Optional<CraneDemandResponseDto> assignCraneDemand(String craneDemandId, AssignCraneDemandDto assignCraneDemandDto) {
         var craneDemand = getCreaneDemandById(craneDemandId);
-        var userThatCreatedDemand = getUserById(craneDemand.getCreatedByUserId());
-        var userThatTakeDemand = getUserByEmail(userEmail);
-        var userAsOperator = operatorService.findByUserId(userThatTakeDemand.getId());
-        var updated = updateCraneDemandWithOperatorInformation(craneDemand, userThatCreatedDemand, userAsOperator, weightCategoryId);
+        var userThatTakeDemand = getUserById(assignCraneDemandDto.getUserId());
+        var userThatCreateDemand = getUserById(craneDemand.getCreatedByUserId());
+        var updated = updateCraneDemandWithOperatorInformation(craneDemand, userThatTakeDemand, assignCraneDemandDto);
+
+        initializeOperatorLocationInCache(userThatTakeDemand, assignCraneDemandDto);
+        sendEmailToUserThatCreateDemand(userThatCreateDemand);
 
         return Optional.of(CraneDemandMapper.MAPPER.mapToDto(updated));
+    }
+
+    private void sendEmailToUserThatCreateDemand(User userThatCreateDemand) {
+        emailService.sendResponseOfCraneDemandEmail(userThatCreateDemand.getName(), userThatCreateDemand.getEmail());
     }
 
     private CraneDemand getCreaneDemandById(String craneDemandId) {
@@ -125,45 +132,34 @@ public class CraneDemandService {
         return user.get();
     }
 
-    private CraneDemand updateCraneDemandWithOperatorInformation(CraneDemand craneDemand, User user, OperatorDto operator, String weightCategoryId) {
+    private CraneDemand updateCraneDemandWithOperatorInformation(CraneDemand craneDemand, User user, AssignCraneDemandDto assignCraneDemandDto) {
         craneDemand.setEditedByUserId(user.getId());
-        craneDemand.setAssignedOperatorId(operator.getId());
-        craneDemand.setAssignedWeightCategoryId(weightCategoryId);
+        craneDemand.setAssignedOperatorId(user.getId());
+        craneDemand.setAssignedWeightCategoryId(assignCraneDemandDto.getWeightCategory().getId());
         craneDemand.setState(CraneDemandStateEnum.TAKEN.name());
         craneDemand.setUpdatedAt(new Date());
-        CraneDemand updated = craneDemandRepository.save(craneDemand);
 
-        // Cargar la información del operador en el cache de localización
-        initializeOperatorLocationInCache(operator.getId());
-
-        emailService.sendResponseOfCraneDemandEmail(user.getName(), user.getEmail());
-        return updated;
+        return craneDemandRepository.save(craneDemand);
     }
 
-    /**
-     * Inicializa la localización del operador en cache con valores por defecto
-     * cuando se asigna a una demanda por primera vez
-     */
-    private void initializeOperatorLocationInCache(String operatorId) {
+    private void initializeOperatorLocationInCache(User user, AssignCraneDemandDto assignCraneDemandDto) {
         try {
-            // Verificar si el operador ya tiene localización en cache
-            if (!operatorService.isOperatorLocationCached(operatorId)) {
-                log.info("Inicializando localización en cache para operador: {}", operatorId);
+            if (!operatorService.isOperatorLocationCached(user.getId())) {
+                log.info("Inicializando localización en cache para operador: {}", user.getId());
 
-                // Crear una localización inicial con coordenadas por defecto
                 OperatorLocationRequestDto initialLocation = OperatorLocationRequestDto.builder()
-                        .latitude(0.0) // Coordenadas por defecto, se actualizarán cuando el operador envíe su ubicación real
-                        .longitude(0.0)
+                        .latitude(assignCraneDemandDto.getLatitude())
+                        .longitude(assignCraneDemandDto.getLongitude())
                         .status("ASSIGNED") // Estado inicial cuando se asigna a una demanda
                         .build();
 
-                operatorService.saveOperatorLocation(operatorId, initialLocation);
-                log.info("Localización inicial cargada en cache para operador: {}", operatorId);
+                operatorService.saveOperatorLocation(user.getId(), initialLocation);
+                log.info("Localización inicial cargada en cache para operador: {}", user.getId());
             } else {
-                log.info("Operador {} ya tiene localización en cache", operatorId);
+                log.info("Operador {} ya tiene localización en cache", user.getId());
             }
         } catch (Exception e) {
-            log.warn("Error al inicializar localización en cache para operador {}: {}", operatorId, e.getMessage());
+            log.warn("Error al inicializar localización en cache para operador {}: {}", user.getId(), e.getMessage());
         }
     }
 
