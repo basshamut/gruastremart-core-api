@@ -7,11 +7,6 @@ import com.gruastremart.api.unit.utils.TestUtils;
 import jakarta.mail.internet.MimeMessage;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Captor;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 import org.springframework.mail.javamail.JavaMailSender;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -25,28 +20,25 @@ import static org.mockito.Mockito.when;
 
 public class EmailServiceTest {
 
-    @Mock
-    private JavaMailSender mailSender;
+    private JavaMailSender createMailSenderMock() {
+        return mock(JavaMailSender.class);
+    }
 
-    @InjectMocks
-    private EmailService emailService;
-
-    @Captor
-    ArgumentCaptor<MimeMessage> mimeMessageCaptor;
-
-    @BeforeEach
-    public void setup() {
-        MockitoAnnotations.openMocks(this);
-
-        emailService = new EmailService(mailSender);
-        TestUtils.setField(emailService, "from", "test@gruastremart.com");
-        TestUtils.setField(emailService, "to", "destino@gruastremart.com");
-        TestUtils.setField(emailService, "contactSubject", "Solicitud de contacto");
-        TestUtils.setField(emailService, "demandSubject", "Solicitud recibida");
+    private EmailService createEmailService(JavaMailSender mailSender) {
+        EmailService service = new EmailService(mailSender);
+        TestUtils.setField(service, "from", "test@gruastremart.com");
+        TestUtils.setField(service, "to", "destino@gruastremart.com");
+        TestUtils.setField(service, "contactSubject", "Solicitud de contacto");
+        TestUtils.setField(service, "demandSubject", "Solicitud recibida");
+        return service;
     }
 
     @Test
     public void testSendContactEmail_shouldSendEmailSuccessfully() throws Exception {
+        // Arrange
+        JavaMailSender mailSender = createMailSenderMock();
+        EmailService emailService = createEmailService(mailSender);
+
         EmailRequestDto request = new EmailRequestDto();
         request.setName("Juan Pérez");
         request.setEmail("juan@example.com");
@@ -56,30 +48,42 @@ public class EmailServiceTest {
         MimeMessage mimeMessage = mock(MimeMessage.class);
         when(mailSender.createMimeMessage()).thenReturn(mimeMessage);
 
+        // Act
         boolean result = emailService.sendContactEmail(request);
 
+        // Assert
         assertTrue(result);
         verify(mailSender).send(any(MimeMessage.class));
     }
 
     @Test
     public void testSendResponseOfCraneDemandEmail_shouldSendEmailSuccessfully() throws Exception {
+        // Arrange
+        JavaMailSender mailSender = createMailSenderMock();
+        EmailService emailService = createEmailService(mailSender);
+
         MimeMessage mimeMessage = mock(MimeMessage.class);
         when(mailSender.createMimeMessage()).thenReturn(mimeMessage);
 
+        // Act
         boolean result = emailService.sendResponseOfCraneDemandEmail("Lucía", "lucia@example.com");
 
+        // Assert
         assertTrue(result);
         verify(mailSender).send(any(MimeMessage.class));
     }
 
     @Test
     public void testSendEmail_shouldThrowServiceExceptionOnFailure() {
+        // Arrange
+        JavaMailSender mailSender = createMailSenderMock();
+        EmailService emailService = createEmailService(mailSender);
+
         MimeMessage mockMessage = mock(MimeMessage.class);
         when(mailSender.createMimeMessage()).thenReturn(mockMessage);
-
         doThrow(new RuntimeException("Fallo interno")).when(mailSender).send(any(MimeMessage.class));
 
+        // Act & Assert
         ServiceException exception = assertThrows(ServiceException.class, () -> {
             emailService.sendResponseOfCraneDemandEmail("Pedro", "pedro@example.com");
         });
