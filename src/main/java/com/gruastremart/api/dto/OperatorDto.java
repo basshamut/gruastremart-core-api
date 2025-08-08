@@ -6,9 +6,11 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
-public class CraneDemandAssignRequestDto {
-    private String weightCategoryId;
+public class OperatorDto {
+    private String id;
+    private String userId;
+    private String operatorVehiculeType;
 }

@@ -13,7 +13,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class CraneOperator {
+public class Operator {
     @Id
     private String id;
     private String userId;

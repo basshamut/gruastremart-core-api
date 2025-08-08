@@ -1,4 +1,4 @@
-package com.gruastremart.api.controller.handler.json;
+package com.gruastremart.api.dto;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -10,14 +10,14 @@ import java.time.ZonedDateTime;
 @Getter
 @ToString
 @NoArgsConstructor(force = true)
-public class HttpErrorInfoJson {
+public class HttpErrorInfoDto {
 
     private final String timestamp;
     private final String path;
     private final HttpStatus httpStatus;
     private final String message;
 
-    public HttpErrorInfoJson(HttpStatus httpStatus, String path, String message) {
+    public HttpErrorInfoDto(HttpStatus httpStatus, String path, String message) {
         this.timestamp = ZonedDateTime.now().toString();
         this.path = path;
         this.httpStatus = httpStatus;

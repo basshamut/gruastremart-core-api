@@ -12,7 +12,8 @@ public class Constants {
     public static final String LOGIN_URL = API_VERSION_PATH + USERS_PATH + LOGIN_PATH;
 
     // Cache
-    public static final String LOGIN_ATTEMPTS_CACHE = "loginAttempts";
+    public static final String OPERATOR_LOCATIONS_CACHE = "operatorLocations";
+    public static final String CRANE_PRICING_CACHE = "cranePricing";
 
     // Email
     public static final String SEND_EMAIL_URL = API_VERSION_PATH + "/emails/contact";

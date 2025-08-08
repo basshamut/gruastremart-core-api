@@ -10,19 +10,29 @@ import org.springframework.context.annotation.Primary;
 
 import java.util.concurrent.TimeUnit;
 
-import static com.gruastremart.api.utils.constants.Constants.LOGIN_ATTEMPTS_CACHE;
+import static com.gruastremart.api.utils.constants.Constants.OPERATOR_LOCATIONS_CACHE;
+import static com.gruastremart.api.utils.constants.Constants.CRANE_PRICING_CACHE;
 
 @Configuration
 @EnableCaching
 public class CacheConfig {
 
     @Primary
-    @Bean(name = "cacheManagerLogin")
-    public CacheManager cacheManagerLogin() {
-        CaffeineCacheManager cacheManager = new CaffeineCacheManager(LOGIN_ATTEMPTS_CACHE);
+    @Bean(name = "operatorLocationsCacheManager")
+    public CacheManager operatorLocationsCacheManager() {
+        CaffeineCacheManager cacheManager = new CaffeineCacheManager(OPERATOR_LOCATIONS_CACHE);
         cacheManager.setCaffeine(Caffeine.newBuilder()
-                .expireAfterWrite(24, TimeUnit.HOURS)
-                .maximumSize(100));
+                .expireAfterWrite(5, TimeUnit.MINUTES) // Las localizaciones expiran en 5 minutos
+                .maximumSize(1000)); // Máximo 1000 operadores
+        return cacheManager;
+    }
+
+    @Bean(name = "cranePricingCacheManager")
+    public CacheManager cranePricingCacheManager() {
+        CaffeineCacheManager cacheManager = new CaffeineCacheManager(CRANE_PRICING_CACHE);
+        cacheManager.setCaffeine(Caffeine.newBuilder()
+                .expireAfterWrite(6, TimeUnit.HOURS) // Los precios expiran en 6 horas
+                .maximumSize(100)); // Máximo 100 configuraciones de precios
         return cacheManager;
     }
 }

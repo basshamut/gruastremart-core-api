@@ -13,6 +13,7 @@ import org.springframework.util.MultiValueMap;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.regex.Pattern;
 
 @RequiredArgsConstructor
 @Repository
@@ -30,10 +31,16 @@ public class UserCustomRepository {
             query.addCriteria(Criteria.where("role").is(params.getFirst("role")));
         }
         if (params.containsKey("email")) {
-            query.addCriteria(Criteria.where("email").regex(Objects.requireNonNull(params.getFirst("email")), "i"));
+            String emailParam = Objects.requireNonNull(params.getFirst("email"));
+            String escapedEmail = Pattern.quote(emailParam);
+            query.addCriteria(Criteria.where("email").regex(escapedEmail, "i"));
         }
         if(params.containsKey("supabaseId")) {
             query.addCriteria(Criteria.where("supabaseId").is(params.getFirst("supabaseId")));
+        }
+        if (params.containsKey("active")) {
+            boolean active = Boolean.parseBoolean(Objects.requireNonNull(params.getFirst("active")));
+            query.addCriteria(Criteria.where("active").is(active));
         }
 
         query.with(pageable);

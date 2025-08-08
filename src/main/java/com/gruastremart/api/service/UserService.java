@@ -38,16 +38,11 @@ public class UserService {
     public UserDto update(String id, UserDto userDto) {
         var user = userRepository.findById(id).orElseThrow(() -> new ServiceException("User not found", 404));
 
-        user.setEmail(userDto.getEmail());
         user.setName(userDto.getName());
         user.setLastName(userDto.getLastName());
-        user.setPhone(userDto.getPhone());
-        user.setAddress(userDto.getAddress());
-        user.setIdentificationNumber(userDto.getIdentificationNumber());
-        user.setBirthDate(userDto.getBirthDate());
         user.setRole(userDto.getRole());
+        user.setActive(userDto.getActive());
 
-        user = UserMapper.MAPPER.mapToEntity(userDto);
         user = userRepository.save(user);
         return UserMapper.MAPPER.mapToDto(user);
     }

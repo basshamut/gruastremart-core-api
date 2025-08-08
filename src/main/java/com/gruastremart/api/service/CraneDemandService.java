@@ -1,11 +1,14 @@
 package com.gruastremart.api.service;
 
+import com.gruastremart.api.dto.AssignCraneDemandDto;
 import com.gruastremart.api.dto.CraneDemandCreateRequestDto;
 import com.gruastremart.api.dto.CraneDemandResponseDto;
+import com.gruastremart.api.dto.OperatorDto;
+import com.gruastremart.api.dto.OperatorLocationRequestDto;
 import com.gruastremart.api.exception.ServiceException;
 import com.gruastremart.api.mapper.CraneDemandMapper;
 import com.gruastremart.api.persistance.entity.CraneDemand;
-import com.gruastremart.api.persistance.entity.CraneOperator;
+import com.gruastremart.api.persistance.entity.Operator;
 import com.gruastremart.api.persistance.entity.User;
 import com.gruastremart.api.persistance.repository.CraneDemandRepository;
 import com.gruastremart.api.persistance.repository.OperatorRepository;
@@ -14,11 +17,11 @@ import com.gruastremart.api.persistance.repository.custom.CraneDemandCustomRepos
 import com.gruastremart.api.utils.enums.CraneDemandStateEnum;
 import com.gruastremart.api.utils.tools.PaginationUtil;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.util.MultiValueMap;
 
@@ -28,16 +31,14 @@ import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class CraneDemandService {
 
     private final CraneDemandRepository craneDemandRepository;
     private final CraneDemandCustomRepository craneDemandCustomRepository;
     private final UserRepository userRepository;
-    private final OperatorRepository operatorRepository;
-
     private final EmailService emailService;
-
-    private final SimpMessagingTemplate messagingTemplate;
+    private final OperatorService operatorService;
 
     public Page<CraneDemandResponseDto> findWithFilters(MultiValueMap<String, String> params) {
         if (PaginationUtil.isValidPagination(params.getFirst("page"), params.getFirst("size"))) {
@@ -70,11 +71,8 @@ public class CraneDemandService {
 
         var craneDemand = buildCraneDemandEntityForSave(dto, user.getId());
         var saved = craneDemandRepository.save(craneDemand);
-        var response = CraneDemandMapper.MAPPER.mapToDto(saved);
 
-        notifyNewDemand(response);
-
-        return response;
+        return CraneDemandMapper.MAPPER.mapToDto(saved);
     }
 
     private void validateUserHasNoActiveDemand(String userId) {
@@ -84,11 +82,6 @@ public class CraneDemandService {
         }
     }
 
-    private void notifyNewDemand(CraneDemandResponseDto dto) {
-        messagingTemplate.convertAndSend("/topic/new-demand", dto);
-    }
-
-
     private CraneDemand buildCraneDemandEntityForSave(CraneDemandCreateRequestDto craneDemandCreateRequestDto, String userId) {
         var craneDemandMapped = CraneDemandMapper.MAPPER.mapToEntity(craneDemandCreateRequestDto);
         craneDemandMapped.setCreatedByUserId(userId);
@@ -97,15 +90,20 @@ public class CraneDemandService {
         return craneDemandMapped;
     }
 
-    public Optional<CraneDemandResponseDto> assignCraneDemand(String craneDemandId, String userEmail) {
+    public Optional<CraneDemandResponseDto> assignCraneDemand(String craneDemandId, AssignCraneDemandDto assignCraneDemandDto) {
         var craneDemand = getCreaneDemandById(craneDemandId);
-        var userThatCreatedDemand = getUserById(craneDemand.getCreatedByUserId());
-        var userThatTakeDemand = getUserByEmail(userEmail);
-        var userAsOperator = getOperatorByUserId(userThatTakeDemand.getId());
+        var userThatTakeDemand = getUserById(assignCraneDemandDto.getUserId());
+        var userThatCreateDemand = getUserById(craneDemand.getCreatedByUserId());
+        var updated = updateCraneDemandWithOperatorInformation(craneDemand, userThatTakeDemand, assignCraneDemandDto);
 
-        CraneDemand updated = updateCraneDemandWithOperatorInformation(craneDemand, userThatCreatedDemand, userAsOperator);
+        initializeOperatorLocationInCache(userThatTakeDemand, assignCraneDemandDto);
+        sendEmailToUserThatCreateDemand(userThatCreateDemand);
 
         return Optional.of(CraneDemandMapper.MAPPER.mapToDto(updated));
+    }
+
+    private void sendEmailToUserThatCreateDemand(User userThatCreateDemand) {
+        emailService.sendResponseOfCraneDemandEmail(userThatCreateDemand.getName(), userThatCreateDemand.getEmail());
     }
 
     private CraneDemand getCreaneDemandById(String craneDemandId) {
@@ -134,36 +132,47 @@ public class CraneDemandService {
         return user.get();
     }
 
-    private CraneOperator getOperatorByUserId(String userId) {
-        var operator = operatorRepository.findByUserId(userId);
-        if (operator.isEmpty()) {
-            throw new ServiceException("Operator not found", 404);
-        }
-
-        return operator.get();
-    }
-
-    private CraneDemand updateCraneDemandWithOperatorInformation(CraneDemand craneDemand, User user, CraneOperator operator) {
+    private CraneDemand updateCraneDemandWithOperatorInformation(CraneDemand craneDemand, User user, AssignCraneDemandDto assignCraneDemandDto) {
         craneDemand.setEditedByUserId(user.getId());
-        craneDemand.setAssignedOperatorId(operator.getId());
+        craneDemand.setAssignedOperatorId(user.getId());
+        craneDemand.setAssignedWeightCategoryId(assignCraneDemandDto.getWeightCategory().getId());
         craneDemand.setState(CraneDemandStateEnum.TAKEN.name());
         craneDemand.setUpdatedAt(new Date());
-        CraneDemand updated = craneDemandRepository.save(craneDemand);
-        emailService.sendResponseOfCraneDemandEmail(user.getName(), user.getEmail());
-        messagingTemplate.convertAndSend("/topic/demand-taken/" + craneDemand.getId(), CraneDemandMapper.MAPPER.mapToDto(updated));
-        return updated;
+
+        return craneDemandRepository.save(craneDemand);
+    }
+
+    private void initializeOperatorLocationInCache(User user, AssignCraneDemandDto assignCraneDemandDto) {
+        try {
+            if (!operatorService.isOperatorLocationCached(user.getId())) {
+                log.info("Inicializando localización en cache para operador: {}", user.getId());
+
+                OperatorLocationRequestDto initialLocation = OperatorLocationRequestDto.builder()
+                        .latitude(assignCraneDemandDto.getLatitude())
+                        .longitude(assignCraneDemandDto.getLongitude())
+                        .status("ASSIGNED") // Estado inicial cuando se asigna a una demanda
+                        .build();
+
+                operatorService.saveOperatorLocation(user.getId(), initialLocation);
+                log.info("Localización inicial cargada en cache para operador: {}", user.getId());
+            } else {
+                log.info("Operador {} ya tiene localización en cache", user.getId());
+            }
+        } catch (Exception e) {
+            log.warn("Error al inicializar localización en cache para operador {}: {}", user.getId(), e.getMessage());
+        }
     }
 
     public void cancelCraneDemand(String craneDemandId) {
         var craneDemandEntity = craneDemandRepository.findById(craneDemandId);
         if (craneDemandEntity.isEmpty()) {
-            throw new ServiceException("User not found", 404);
+            throw new ServiceException("Crane demand not found", 404);
         }
-        craneDemandEntity.get().setState(CraneDemandStateEnum.CANCELLED.name());
-        craneDemandRepository.save(craneDemandEntity.get());
-    }
 
-    public void notifyOperatorLocation(String craneDemandId, String locationJson) {
-        messagingTemplate.convertAndSend("/topic/operator-location/" + craneDemandId, locationJson);
+        var demand = craneDemandEntity.get();
+        demand.setState(CraneDemandStateEnum.CANCELLED.name());
+        demand.setUpdatedAt(new Date());
+        craneDemandRepository.save(demand);
     }
 }
+

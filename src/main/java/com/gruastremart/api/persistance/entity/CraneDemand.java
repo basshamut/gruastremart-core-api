@@ -32,6 +32,17 @@ public class CraneDemand {
     private String breakdown;
     private String referenceSource;
     private String recommendedBy;
+
+    // Vehicle information
+    private String vehicleBrand;
+    private String vehicleModel;
+    private Integer vehicleYear;
+    private String vehiclePlate;
+    private String vehicleColor;
+
+    // Pricing information
+    private String assignedWeightCategoryId;
+
     @GeoSpatialIndexed
     private GeoJsonPoint currentLocation;
     private String currentLocationName;
@@ -45,3 +56,4 @@ public class CraneDemand {
         return this.getState().equals(CraneDemandStateEnum.ACTIVE.name()) || this.getState().equals(CraneDemandStateEnum.TAKEN.name());
     }
 }
+
