@@ -3,15 +3,12 @@ package com.gruastremart.api.service;
 import com.gruastremart.api.dto.AssignCraneDemandDto;
 import com.gruastremart.api.dto.CraneDemandCreateRequestDto;
 import com.gruastremart.api.dto.CraneDemandResponseDto;
-import com.gruastremart.api.dto.OperatorDto;
 import com.gruastremart.api.dto.OperatorLocationRequestDto;
 import com.gruastremart.api.exception.ServiceException;
 import com.gruastremart.api.mapper.CraneDemandMapper;
 import com.gruastremart.api.persistance.entity.CraneDemand;
-import com.gruastremart.api.persistance.entity.Operator;
 import com.gruastremart.api.persistance.entity.User;
 import com.gruastremart.api.persistance.repository.CraneDemandRepository;
-import com.gruastremart.api.persistance.repository.OperatorRepository;
 import com.gruastremart.api.persistance.repository.UserRepository;
 import com.gruastremart.api.persistance.repository.custom.CraneDemandCustomRepository;
 import com.gruastremart.api.utils.enums.CraneDemandStateEnum;
@@ -91,6 +88,12 @@ public class CraneDemandService {
     }
 
     public Optional<CraneDemandResponseDto> assignCraneDemand(String craneDemandId, AssignCraneDemandDto assignCraneDemandDto) {
+
+        var craneDemandExistance = craneDemandRepository.hasOperatorAssignedAndIsTaken(assignCraneDemandDto.getUserId());
+        if (craneDemandExistance.isPresent()) {
+            throw new ServiceException("User already has an active or taken crane demand", 400);
+        }
+
         var craneDemand = getCreaneDemandById(craneDemandId);
         var userThatTakeDemand = getUserById(assignCraneDemandDto.getUserId());
         var userThatCreateDemand = getUserById(craneDemand.getCreatedByUserId());
