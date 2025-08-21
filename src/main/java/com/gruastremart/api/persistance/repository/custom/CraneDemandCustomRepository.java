@@ -52,6 +52,10 @@ public class CraneDemandCustomRepository {
             query.addCriteria(Criteria.where("createdByUserId").is(params.getFirst("createdByUserId")));
         }
 
+        if (params.containsKey("assignedOperatorId")) {
+            query.addCriteria(Criteria.where("assignedOperatorId").is(params.getFirst("assignedOperatorId")));
+        }
+
         if (lat != DEFAULT_PAGE_VALUE && lng != DEFAULT_PAGE_VALUE && radio != DEFAULT_PAGE_VALUE) {
             var punto = new Point(lng, lat); // GeoJSON usa (lng, lat)
             var distancia = new Distance(radio, Metrics.KILOMETERS);

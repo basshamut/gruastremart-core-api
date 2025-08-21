@@ -1,11 +1,10 @@
 package com.gruastremart.api.controller;
 
 import com.gruastremart.api.dto.AssignCraneDemandDto;
-import com.gruastremart.api.dto.HttpErrorInfoDto;
 import com.gruastremart.api.dto.CraneDemandCreateRequestDto;
 import com.gruastremart.api.dto.CraneDemandResponseDto;
+import com.gruastremart.api.dto.HttpErrorInfoDto;
 import com.gruastremart.api.service.CraneDemandService;
-import com.gruastremart.api.utils.enums.WeightCategoryEnum;
 import com.gruastremart.api.utils.tools.RequestMetadataExtractorUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -70,7 +69,9 @@ public class CraneDemandController {
                     name = "endDate",
                     description = "Fecha de fin para filtrar demandas (formato: yyyy-MM-dd o yyyy-MM-dd'T'HH:mm:ss)",
                     schema = @Schema(type = "string", format = "date-time")
-            )
+            ),
+            @Parameter(name = "createdByUserId", description = "ID del usuario que creó la demanda"),
+            @Parameter(name = "assignedOperatorId", description = "ID del operador asignado a la demanda")
     })
     public ResponseEntity<Page<CraneDemandResponseDto>> findWithFilters(@Parameter(description = "Query parameters for filtering crane demands") @RequestParam(required = false) MultiValueMap<String, String> params) {
         var users = craneDemandService.findWithFilters(params);
