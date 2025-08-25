@@ -41,7 +41,7 @@ public class AuthController {
             @RequestHeader("Authorization") @Parameter(description = "Bearer token del usuario autenticado", required = true) String authHeader) {
 
         String token = authHeader.replace("Bearer ", "");
-        authService.changePassword(request.getNewPassword(), token);
+        authService.changePassword(token, request.getNewPassword());
 
         return ResponseEntity.ok().build();
     }

@@ -11,7 +11,8 @@ import java.util.Map;
  */
 @FeignClient(
         name = "supabaseAuthClient",
-        url = "${app.security.supabaseUrl}"
+        url = "${app.security.supabaseUrl}",
+        configuration = com.gruastremart.api.config.feign.FeignConfig.class
 )
 public interface SupabaseAuthClient {
 
@@ -32,11 +33,11 @@ public interface SupabaseAuthClient {
 
     /**
      * Cambia/restablece la contraseña del usuario autenticado por el token (access/recovery).
-     * PATCH /auth/v1/user
+     * PUT /auth/v1/user
      * Body: { "password": "..." }
      * Headers: apikey, Authorization: Bearer <token>
      */
-    @PatchMapping(
+    @PutMapping(
             value = "/auth/v1/user",
             consumes = MediaType.APPLICATION_JSON_VALUE
     )

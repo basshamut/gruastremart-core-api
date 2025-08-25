@@ -48,6 +48,18 @@ public class EmailService {
         return sendEmail(demandSubject, htmlBody, email);
     }
 
+    public boolean sendPasswordChangeNotification(final String email, final String subject, final String htmlBody) {
+        logger.info("Iniciando envío de notificación de cambio de contraseña...");
+        return sendEmail(subject, htmlBody, email);
+    }
+
+    public boolean sendPasswordChangeNotification(final String email) {
+        logger.info("Iniciando envío de notificación de cambio de contraseña...");
+        String subject = "Contraseña cambiada exitosamente";
+        String htmlBody = buildPasswordChangeEmailBody();
+        return sendEmail(subject, htmlBody, email);
+    }
+
     private boolean sendEmail(String subject, String body, String to) {
         logger.info("Iniciando envío de correo...");
 
@@ -85,5 +97,17 @@ public class EmailService {
                 + "<br/>"
                 + "<p>Un saludo,<br/>"
                 + "El equipo de Grúas Tre-Mart</p>";
+    }
+
+    private String buildPasswordChangeEmailBody() {
+        return "<h2>Contraseña cambiada exitosamente</h2>"
+                + "<p>Te informamos que tu contraseña ha sido cambiada exitosamente.</p>"
+                + "<p>Si no realizaste este cambio, por favor contacta con nuestro soporte inmediatamente.</p>"
+                + "<p>Fecha y hora: " + java.time.LocalDateTime.now().toString() + "</p>"
+                + "<br/>"
+                + "<p>Un saludo,<br/>"
+                + "El equipo de Grúas Tre-Mart</p>"
+                + "<br/>"
+                + "<p><small>Este es un mensaje automático, por favor no respondas a este correo.</small></p>";
     }
 }
