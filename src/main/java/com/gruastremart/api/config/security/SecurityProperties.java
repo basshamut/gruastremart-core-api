@@ -14,5 +14,7 @@ public class SecurityProperties {
     private Integer tokenExpirationTimeInMinutes;
 
     private String supabaseSecret;
+    private String supabaseUrl;
+    private String supabaseAnonKey;
 }
 

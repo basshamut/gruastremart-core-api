@@ -137,5 +137,18 @@ public class CraneDemandController {
         craneDemandService.cancelCraneDemand(id);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
+
+    @Operation(summary = "Complete Crane Demand", description = "Complete an existing crane demand")
+    @ApiResponse(responseCode = "204", description = "NO CONTENT")
+    @ApiResponse(responseCode = "400", description = "BAD REQUEST", content = @Content(mediaType = "application/json", schema = @Schema(implementation = HttpErrorInfoDto.class)))
+    @ApiResponse(responseCode = "401", description = "UNAUTHORIZED", content = @Content(mediaType = "application/json", schema = @Schema(implementation = HttpErrorInfoDto.class)))
+    @ApiResponse(responseCode = "403", description = "FORBIDDEN", content = @Content(mediaType = "application/json", schema = @Schema(implementation = HttpErrorInfoDto.class)))
+    @ApiResponse(responseCode = "404", description = "NOT FOUND", content = @Content(mediaType = "application/json", schema = @Schema(implementation = HttpErrorInfoDto.class)))
+    @ApiResponse(responseCode = "500", description = "INTERNAL SERVER ERROR", content = @Content(mediaType = "application/json", schema = @Schema(implementation = HttpErrorInfoDto.class)))
+    @PatchMapping("/{id}/complete")
+    public ResponseEntity<Void> completeCraneDemand(@Parameter(description = "Unique identifier of the crane demand to cancel", required = true) @PathVariable String id) {
+        craneDemandService.completeCraneDemand(id);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    }
 }
 

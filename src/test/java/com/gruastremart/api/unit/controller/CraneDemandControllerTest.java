@@ -218,4 +218,44 @@ class CraneDemandControllerTest {
         // Assert
         assertEquals(HttpStatus.NO_CONTENT, result.getStatusCode());
     }
+
+    @Test
+    void testCancelCraneDemandNotFound() {
+        // Arrange
+        Mockito.doThrow(new ServiceException("Crane demand not found", 404))
+                .when(craneDemandService).cancelCraneDemand(eq("invalid-id"));
+
+        // Act & Assert
+        ServiceException exception = assertThrows(ServiceException.class, () -> {
+            craneDemandController.cancelCraneDemand("invalid-id");
+        });
+
+        assertEquals("Crane demand not found", exception.getMessage());
+    }
+
+    @Test
+    void testCompleteCraneDemand() {
+        // Arrange
+        Mockito.doNothing().when(craneDemandService).completeCraneDemand(eq("1"));
+
+        // Act
+        ResponseEntity<Void> result = craneDemandController.completeCraneDemand("1");
+
+        // Assert
+        assertEquals(HttpStatus.NO_CONTENT, result.getStatusCode());
+    }
+
+    @Test
+    void testCompleteCraneDemandNotFound() {
+        // Arrange
+        Mockito.doThrow(new ServiceException("Crane demand not found", 404))
+                .when(craneDemandService).completeCraneDemand(eq("invalid-id"));
+
+        // Act & Assert
+        ServiceException exception = assertThrows(ServiceException.class, () -> {
+            craneDemandController.completeCraneDemand("invalid-id");
+        });
+
+        assertEquals("Crane demand not found", exception.getMessage());
+    }
 }

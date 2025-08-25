@@ -15,10 +15,17 @@ import org.springframework.security.web.servlet.util.matcher.MvcRequestMatcher;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.web.servlet.handler.HandlerMappingIntrospector;
 
+import static com.gruastremart.api.utils.constants.Constants.ACTUATOR_PATH;
+import static com.gruastremart.api.utils.constants.Constants.ERROR_PATH;
+import static com.gruastremart.api.utils.constants.Constants.FORGOT_PASSWORD_URL;
+import static com.gruastremart.api.utils.constants.Constants.H2_CONSOLE_PATH;
 import static com.gruastremart.api.utils.constants.Constants.LOGIN_URL;
 import static com.gruastremart.api.utils.constants.Constants.REGISTER_FORM_URL;
+import static com.gruastremart.api.utils.constants.Constants.RESET_PASSWORD_URL;
 import static com.gruastremart.api.utils.constants.Constants.SEND_CONTACTFORM_URL;
 import static com.gruastremart.api.utils.constants.Constants.SEND_EMAIL_URL;
+import static com.gruastremart.api.utils.constants.Constants.SWAGGER_API_DOCS_PATH;
+import static com.gruastremart.api.utils.constants.Constants.SWAGGER_PATH;
 
 @Configuration
 @EnableWebSecurity
@@ -32,14 +39,17 @@ public class SecurityConfig {
     }
 
     private static final String[] MVC_WHITE_LIST = {
-            "/swagger*/**",
-            "/v3/api-docs/**",
-            "/console/**",
-            "/error",
+            SWAGGER_PATH,
+            SWAGGER_API_DOCS_PATH,
+            H2_CONSOLE_PATH,
+            ERROR_PATH,
+            ACTUATOR_PATH,
             LOGIN_URL,
             SEND_EMAIL_URL,
             SEND_CONTACTFORM_URL,
-            REGISTER_FORM_URL
+            REGISTER_FORM_URL,
+            FORGOT_PASSWORD_URL,
+            RESET_PASSWORD_URL
     };
 
     private static final String[] NON_MVC_WHITE_LIST = {

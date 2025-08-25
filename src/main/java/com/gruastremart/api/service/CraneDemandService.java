@@ -167,13 +167,15 @@ public class CraneDemandService {
     }
 
     public void cancelCraneDemand(String craneDemandId) {
-        var craneDemandEntity = craneDemandRepository.findById(craneDemandId);
-        if (craneDemandEntity.isEmpty()) {
-            throw new ServiceException("Crane demand not found", 404);
-        }
-
-        var demand = craneDemandEntity.get();
+        var demand = craneDemandRepository.findById(craneDemandId).orElseThrow(() -> new ServiceException("Crane demand not found", 404));
         demand.setState(CraneDemandStateEnum.CANCELLED.name());
+        demand.setUpdatedAt(new Date());
+        craneDemandRepository.save(demand);
+    }
+
+    public void completeCraneDemand(String id) {
+        var demand = craneDemandRepository.findById(id).orElseThrow(() -> new ServiceException("Crane demand not found", 404));
+        demand.setState(CraneDemandStateEnum.COMPLETED.name());
         demand.setUpdatedAt(new Date());
         craneDemandRepository.save(demand);
     }

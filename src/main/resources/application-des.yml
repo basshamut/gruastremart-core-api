@@ -31,6 +31,8 @@ spring:
 app:
   security:
     supabaseSecret: ${SUPABASE_SECURITY_SECRET_KEY}
+    supabaseUrl: ${SUPABASE_URL}
+    supabaseAnonKey: ${SUPABASE_ANON_KEY}
 mailer:
   from: "job.jesus.1702@gmail.com"
   to: "tremartca@gmail.com"
