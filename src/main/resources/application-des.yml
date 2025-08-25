@@ -38,3 +38,5 @@ mailer:
   to: "tremartca@gmail.com"
   contact-subject: "Nuevo mensaje de contacto"
   demand-subject: "Solicitud de Atención Asignada"
+redirect:
+  forgot-password-url: ${EMAIL_FORGOT_PASSWORD_LINK}

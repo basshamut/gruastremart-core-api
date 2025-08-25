@@ -8,6 +8,7 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.nio.charset.StandardCharsets;
@@ -21,6 +22,9 @@ public class AuthService {
     private final SupabaseAuthClient authClient;
     private final SecurityProperties securityProperties;
     private final EmailService emailService;
+
+    @Value("${redirect.forgot-password-url}")
+    private String redirectTo;
 
     public void changePassword(String accessToken, String newPassword) {
         if (accessToken == null || accessToken.isBlank()) {
@@ -74,6 +78,11 @@ public class AuthService {
 
         Map<String, Object> body = new HashMap<>();
         body.put("email", email);
+        
+        // Agregar callback URL si se proporciona
+        if (redirectTo != null && !redirectTo.isBlank()) {
+            body.put("redirect_to", redirectTo);
+        }
 
         try {
             authClient.recover(securityProperties.getSupabaseAnonKey(), body);
