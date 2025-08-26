@@ -63,7 +63,7 @@ jobs:
 
             # Crear o actualizar el Secret desde el .env local
             sudo kubectl create secret generic gruastremart-core-env \
-              --from-file=.env=/home/k3s-deployments/gruastremart-core-api/.env \
+              --from-env-file=/home/k3s-deployments/gruastremart-core-api/.env \
               --dry-run=client -o yaml | sudo kubectl apply -f -
 
             # Aplicar el deployment si aún no existe o se ha actualizado
