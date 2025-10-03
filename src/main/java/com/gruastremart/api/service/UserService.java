@@ -2,9 +2,14 @@ package com.gruastremart.api.service;
 
 import com.gruastremart.api.dto.UserDto;
 import com.gruastremart.api.exception.ServiceException;
+import com.gruastremart.api.persistance.entity.Operator;
+import com.gruastremart.api.persistance.entity.User;
+import com.gruastremart.api.persistance.repository.OperatorRepository;
 import com.gruastremart.api.persistance.repository.UserRepository;
 import com.gruastremart.api.persistance.repository.custom.UserCustomRepository;
 import com.gruastremart.api.mapper.UserMapper;
+import com.gruastremart.api.utils.enums.OperatorVehiculeTypeEnum;
+import com.gruastremart.api.utils.enums.Role;
 import com.gruastremart.api.utils.tools.PaginationUtil;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -21,6 +26,7 @@ import java.util.Objects;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final OperatorRepository operatorRepository;
     private final UserCustomRepository userCustomRepository;
 
     public UserDto register(UserDto userDto) {
@@ -36,6 +42,27 @@ public class UserService {
     }
 
     public UserDto update(String id, UserDto userDto) {
+        var user = updateUserInformation(id, userDto);
+
+        saveOperatorInfo(userDto, user);
+
+        return UserMapper.MAPPER.mapToDto(user);
+    }
+
+    private void saveOperatorInfo(UserDto userDto, User user) {
+        if(userDto.getRole() == Role.OPERATOR){
+            var operator = operatorRepository.findByUserId(user.getId());
+            if (operator.isEmpty()) {
+                var newOperator = Operator.builder()
+                        .userId(user.getId())
+                        .operatorVehiculeType(OperatorVehiculeTypeEnum.CRANE)
+                        .build();
+                operatorRepository.save(newOperator);
+            }
+        }
+    }
+
+    private User updateUserInformation(String id, UserDto userDto) {
         var user = userRepository.findById(id).orElseThrow(() -> new ServiceException("User not found", 404));
 
         user.setName(userDto.getName());
@@ -44,7 +71,7 @@ public class UserService {
         user.setActive(userDto.getActive());
 
         user = userRepository.save(user);
-        return UserMapper.MAPPER.mapToDto(user);
+        return user;
     }
 
     public Page<UserDto> findWithFilters(MultiValueMap<String, String> params) {
