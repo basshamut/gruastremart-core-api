@@ -36,4 +36,8 @@ public class Constants {
     // Auth
     public static final String FORGOT_PASSWORD_URL = API_VERSION_PATH + "/auth/forgot-password";
     public static final String RESET_PASSWORD_URL = API_VERSION_PATH + "/auth/reset-password";
+
+    //Actuator
+    public static final String ACTUATOR_PATHS = "/actuator/**";
+
 }
