@@ -33,6 +33,9 @@ public class CraneDemandResponseDto {
 
     // Pricing information
     private String assignedWeightCategoryId;
+    
+    // Payment information
+    private String paymentId;
 
     private LocationDto currentLocation;
     private LocationDto destinationLocation;

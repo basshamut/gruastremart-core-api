@@ -42,6 +42,9 @@ public class CraneDemand {
 
     // Pricing information
     private String assignedWeightCategoryId;
+    
+    // Payment information
+    private String paymentId;
 
     @GeoSpatialIndexed
     private GeoJsonPoint currentLocation;
