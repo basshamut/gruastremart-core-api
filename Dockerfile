@@ -22,7 +22,7 @@ RUN apk add --no-cache curl file
 # Descargar el agente de OpenTelemetry con validación
 ARG OTEL_AGENT_VERSION=2.9.0
 RUN curl -L -f -o opentelemetry-javaagent.jar \
-    "https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/download/v${OTEL_AGENT_VERSION}/opentelemetry-javaagent-${OTEL_AGENT_VERSION}.jar" \
+    "https://repo1.maven.org/maven2/io/opentelemetry/javaagent/opentelemetry-javaagent/${OTEL_AGENT_VERSION}/opentelemetry-javaagent-${OTEL_AGENT_VERSION}.jar" \
     && ls -la opentelemetry-javaagent.jar \
     && file opentelemetry-javaagent.jar \
     && test -s opentelemetry-javaagent.jar \
