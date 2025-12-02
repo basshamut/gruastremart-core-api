@@ -20,7 +20,7 @@ WORKDIR /app
 RUN apk add --no-cache curl
 
 # Descargar el agente de OpenTelemetry
-ARG OTEL_AGENT_VERSION=2.10.0
+ARG OTEL_AGENT_VERSION=2.9.0
 RUN curl -L -o opentelemetry-javaagent.jar \
     "https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/download/v${OTEL_AGENT_VERSION}/opentelemetry-javaagent-${OTEL_AGENT_VERSION}.jar"
 
