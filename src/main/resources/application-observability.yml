@@ -1,0 +1,42 @@
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,metrics,traces
+  endpoint:
+    health:
+      show-details: always
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+  tracing:
+    enabled: true
+    sampling:
+      probability: 1.0
+
+# Configuración específica para OpenTelemetry
+otel:
+  instrumentation:
+    micrometer:
+      enabled: true
+    spring-web:
+      enabled: true
+    spring-webmvc:
+      enabled: true
+    mongo:
+      enabled: true
+    http-client:
+      enabled: true
+    actuator:
+      enabled: true
+
+# Configuración de trazas
+spring:
+  application:
+    name: gruastremart-core-api
+
+# Headers de correlación para trazas distribuidas
+logging:
+  pattern:
+    level: "%5p [${spring.application.name:},%X{traceId:-},%X{spanId:-}]"

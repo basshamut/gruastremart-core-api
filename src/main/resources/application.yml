@@ -2,9 +2,13 @@ server:
   port: 8080
   servlet:
     context-path: /gruastremart-core-api
+
 spring:
   profiles:
     active: ${SPRING_PROFILES_ACTIVE:local}
+    include: observability
+  application:
+    name: gruastremart-core-api
   web:
     resources:
       add-mappings: true
@@ -13,7 +17,7 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info,prometheus,metrics
+        include: health,info,prometheus,metrics,traces
       base-path: /actuator
       path-mapping:
         health: health
@@ -26,3 +30,7 @@ management:
       enabled: true
     health:
       show-details: always
+  tracing:
+    enabled: true
+    sampling:
+      probability: 1.0
