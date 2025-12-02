@@ -19,10 +19,14 @@ WORKDIR /app
 # Instalar curl para descargar el agente de OpenTelemetry
 RUN apk add --no-cache curl
 
-# Descargar el agente de OpenTelemetry
+# Descargar el agente de OpenTelemetry con validación
 ARG OTEL_AGENT_VERSION=2.9.0
 RUN curl -L -o opentelemetry-javaagent.jar \
-    "https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/download/v${OTEL_AGENT_VERSION}/opentelemetry-javaagent-${OTEL_AGENT_VERSION}.jar"
+    "https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/download/v${OTEL_AGENT_VERSION}/opentelemetry-javaagent-${OTEL_AGENT_VERSION}.jar" \
+    && ls -la opentelemetry-javaagent.jar \
+    && file opentelemetry-javaagent.jar \
+    && test -s opentelemetry-javaagent.jar \
+    && echo "OpenTelemetry agent downloaded successfully"
 
 # Copiar el JAR generado desde la etapa build
 COPY --from=build /app/target/gruastremart-core-api-1.0-SNAPSHOT.jar app.jar
@@ -43,4 +47,17 @@ ENV OTEL_INSTRUMENTATION_HTTP_CLIENT_ENABLED=true
 ENV OTEL_INSTRUMENTATION_JDBC_ENABLED=true
 
 EXPOSE 8080
-ENTRYPOINT ["java", "-javaagent:opentelemetry-javaagent.jar", "-jar", "app.jar"]
+
+# Verificar que el agente existe y es válido
+RUN test -f opentelemetry-javaagent.jar && test -s opentelemetry-javaagent.jar || { echo "OpenTelemetry agent not found or empty!"; exit 1; }
+
+# Crear un script de inicio que verifique el agente antes de usar
+RUN echo '#!/bin/sh' > /app/start.sh && \
+    echo 'if [ ! -f opentelemetry-javaagent.jar ] || [ ! -s opentelemetry-javaagent.jar ]; then' >> /app/start.sh && \
+    echo '  echo "Error: OpenTelemetry agent not found or empty!"' >> /app/start.sh && \
+    echo '  exit 1' >> /app/start.sh && \
+    echo 'fi' >> /app/start.sh && \
+    echo 'exec java -javaagent:opentelemetry-javaagent.jar -jar app.jar' >> /app/start.sh && \
+    chmod +x /app/start.sh
+
+ENTRYPOINT ["/app/start.sh"]
