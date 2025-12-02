@@ -16,16 +16,17 @@ RUN mvn clean package -DskipTests
 FROM eclipse-temurin:21-jdk-alpine
 WORKDIR /app
 
-# Instalar curl para descargar el agente de OpenTelemetry
-RUN apk add --no-cache curl
+# Instalar curl y file para descargar el agente de OpenTelemetry
+RUN apk add --no-cache curl file
 
 # Descargar el agente de OpenTelemetry con validación
 ARG OTEL_AGENT_VERSION=2.9.0
-RUN curl -L -o opentelemetry-javaagent.jar \
+RUN curl -L -f -o opentelemetry-javaagent.jar \
     "https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/download/v${OTEL_AGENT_VERSION}/opentelemetry-javaagent-${OTEL_AGENT_VERSION}.jar" \
     && ls -la opentelemetry-javaagent.jar \
     && file opentelemetry-javaagent.jar \
     && test -s opentelemetry-javaagent.jar \
+    && [ $(stat -c%s opentelemetry-javaagent.jar) -gt 1000000 ] \
     && echo "OpenTelemetry agent downloaded successfully"
 
 # Copiar el JAR generado desde la etapa build
