@@ -5,7 +5,8 @@ spring:
     location: classpath:banner.txt
   data:
     mongodb:
-      uri: ${MONGODB_LOCAL_URL}
+#      uri: ${MONGODB_LOCAL_URL}
+      uri: ${MONGODB_DEV_URL}
   web:
     resources:
       add-mappings: true
@@ -34,8 +35,13 @@ app:
     supabaseServiceRoleKey: ${SUPABASE_SERVICE_ROLE_KEY}
     supabaseUrl: ${SUPABASE_URL}
     recoverRedirect: ${SUPABASE_RECOVER_REDIRECT_URL:}
+  image:
+    storage: local
+    upload-dir: uploads/payments/
 mailer:
   from: "job.jesus.1702@gmail.com"
   to: "tremartca@gmail.com"
   contact-subject: "Nuevo mensaje de contacto (Prueba / Local)"
   demand-subject: "Solicitud de Atención Asignada (Prueba / Local)"
+redirect:
+  forgot-password-url: ${EMAIL_FORGOT_PASSWORD_LINK}

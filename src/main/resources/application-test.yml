@@ -32,6 +32,12 @@ app:
   security:
     supabaseSecret: ${SUPABASE_SECURITY_SECRET_KEY}
     supabaseUrl: ${SUPABASE_URL}
+  image:
+    storage: cloudinary
+cloudinary:
+  cloud-name: ${CLOUDINARY_CLOUD_NAME}
+  api-key: ${CLOUDINARY_API_KEY}
+  api-secret: ${CLOUDINARY_API_SECRET}
 mailer:
   from: "job.jesus.1702@gmail.com"
   to: "tremartca@gmail.com"

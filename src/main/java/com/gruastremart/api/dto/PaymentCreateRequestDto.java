@@ -1,5 +1,6 @@
 package com.gruastremart.api.dto;
 
+import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -26,6 +27,7 @@ public class PaymentCreateRequestDto {
     @NotNull(message = "La imagen del comprobante es obligatoria")
     private MultipartFile paymentImage;
     
-    // Monto opcional para referencia
+    @NotNull(message = "El monto del pago es obligatorio")
+    @DecimalMin(value = "0.01", message = "El monto debe ser mayor a 0")
     private Double amount;
 }

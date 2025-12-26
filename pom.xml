@@ -14,7 +14,7 @@
         <spring.boot.version>3.3.3</spring.boot.version>
         <springdoc.openapi.version>2.3.0</springdoc.openapi.version>
         <caffeine.version>3.1.8</caffeine.version>
-        <jjwt.version>0.11.5</jjwt.version>
+        <jjwt.version>0.12.6</jjwt.version>
         <springdoc.openapi.ui.version>1.4.8</springdoc.openapi.ui.version>
         <lombok.version>1.18.30</lombok.version>
         <webjars-locator.version>0.52</webjars-locator.version>
@@ -263,6 +263,13 @@
             <groupId>jakarta.activation</groupId>
             <artifactId>jakarta.activation-api</artifactId>
             <version>${jakarta.mail.version}</version>
+        </dependency>
+
+        <!-- Cloudinary -->
+        <dependency>
+            <groupId>com.cloudinary</groupId>
+            <artifactId>cloudinary-http44</artifactId>
+            <version>1.38.0</version>
         </dependency>
 
     </dependencies>

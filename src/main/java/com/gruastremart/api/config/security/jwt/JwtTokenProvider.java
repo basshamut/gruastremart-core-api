@@ -30,7 +30,7 @@ public class JwtTokenProvider {
     public Authentication getAuthentication(String token) {
         Key signingKey = Keys.hmacShaKeyFor(securityProperties.getSupabaseSecret().getBytes());//Here get the supabase secret from yaml file
 
-        Claims claims = Jwts.parserBuilder()
+        Claims claims = Jwts.parser()
                 .setSigningKey(signingKey)
                 .build()
                 .parseClaimsJws(token)

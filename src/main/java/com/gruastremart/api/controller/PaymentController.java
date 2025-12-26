@@ -27,7 +27,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/v1/payments")
+@RequestMapping("/v1/payments")
 @RequiredArgsConstructor
 @Slf4j
 @Tag(name = "Payments", description = "API para gestión de pagos de servicios de grúa")

@@ -9,6 +9,7 @@ import com.gruastremart.api.persistance.entity.CraneDemand;
 import com.gruastremart.api.persistance.entity.Payment;
 import com.gruastremart.api.persistance.repository.CraneDemandRepository;
 import com.gruastremart.api.persistance.repository.PaymentRepository;
+import com.gruastremart.api.service.storage.ImageStorageService;
 import com.gruastremart.api.utils.enums.CraneDemandStateEnum;
 import com.gruastremart.api.utils.enums.PaymentStatusEnum;
 import lombok.RequiredArgsConstructor;
@@ -19,13 +20,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.util.Date;
-import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -36,9 +31,7 @@ public class PaymentService {
     private final CraneDemandRepository craneDemandRepository;
     private final PaymentMapper paymentMapper;
     private final EmailService emailService;
-
-    // Directorio donde se almacenarán las imágenes (configurable)
-    private static final String UPLOAD_DIR = "uploads/payments/";
+    private final ImageStorageService imageStorageService;
 
     /**
      * Registra un nuevo pago para una demanda completada
@@ -55,7 +48,7 @@ public class PaymentService {
         }
 
         // Guardar la imagen del comprobante
-        String imageUrl = savePaymentImage(dto.getPaymentImage(), dto.getDemandId());
+        String imageUrl = imageStorageService.saveImage(dto.getPaymentImage(), dto.getDemandId());
 
         // Crear la entidad Payment
         Payment payment = Payment.builder()
@@ -165,37 +158,6 @@ public class PaymentService {
         return demand;
     }
 
-    /**
-     * Guarda la imagen del comprobante de pago
-     */
-    private String savePaymentImage(MultipartFile file, String demandId) {
-        try {
-            // Crear directorio si no existe
-            Path uploadPath = Paths.get(UPLOAD_DIR);
-            if (!Files.exists(uploadPath)) {
-                Files.createDirectories(uploadPath);
-            }
-
-            // Generar nombre único para el archivo
-            String originalFilename = file.getOriginalFilename();
-            String fileExtension = originalFilename != null ? 
-                    originalFilename.substring(originalFilename.lastIndexOf(".")) : ".jpg";
-            String uniqueFilename = "payment_" + demandId + "_" + UUID.randomUUID() + fileExtension;
-
-            // Guardar el archivo
-            Path filePath = uploadPath.resolve(uniqueFilename);
-            Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
-
-            log.info("Imagen de pago guardada: {}", filePath);
-
-            // Retornar la URL relativa (o absoluta según configuración)
-            return UPLOAD_DIR + uniqueFilename;
-
-        } catch (IOException e) {
-            log.error("Error al guardar imagen de pago: {}", e.getMessage());
-            throw new ServiceException("Error al guardar la imagen del comprobante", HttpStatus.INTERNAL_SERVER_ERROR.value());
-        }
-    }
 
     /**
      * Envía notificación por email sobre la verificación del pago

@@ -5,6 +5,7 @@ mvnw.cmd
 mvnw
 !.mvn/wrapper/maven-wrapper.jar
 coverage/
+uploads/
 
 ### Code-Java ###
 # Language Support for Java(TM) by Red Hat extension for Visual Studio Code - https://marketplace.visualstudio.com/items?itemName=redhat.java

@@ -52,7 +52,7 @@ public class RequestMetadataExtractorUtil {
 
         var decodedKey = jwtSecret.getBytes(StandardCharsets.UTF_8);
 
-        return Jwts.parserBuilder()
+        return Jwts.parser()
                 .setSigningKey(decodedKey)
                 .build()
                 .parseClaimsJws(token)

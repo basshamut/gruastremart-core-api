@@ -159,7 +159,7 @@ public class AuthService {
             
             Key signingKey = Keys.hmacShaKeyFor(securityProperties.getSupabaseSecret().getBytes());
             
-            Claims claims = Jwts.parserBuilder()
+            Claims claims = Jwts.parser()
                     .setSigningKey(signingKey)
                     .build()
                     .parseClaimsJws(token)
