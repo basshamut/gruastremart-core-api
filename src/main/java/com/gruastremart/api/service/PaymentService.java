@@ -22,6 +22,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -100,11 +101,43 @@ public class PaymentService {
     }
 
     /**
+     * Obtiene todos los pagos del sistema
+     * @param status Estado del pago (opcional: PENDING, VERIFIED, REJECTED)
+     * @param pageable Parámetros de paginación
+     * @return Página con todos los pagos del sistema
+     */
+    public Page<PaymentResponseDto> getAllPayments(String status, Pageable pageable) {
+        log.info("Obteniendo todos los pagos del sistema con filtro de estado: {}", status);
+
+        Page<Payment> payments;
+
+        if (status != null && !status.isEmpty()) {
+            payments = paymentRepository.findByStatus(status, pageable);
+        } else {
+            payments = paymentRepository.findAll(pageable);
+        }
+
+        return payments.map(payment -> {
+            PaymentResponseDto dto = paymentMapper.toResponseDto(payment);
+
+            // Buscar la demanda asociada para obtener sus datos
+            CraneDemand demand = craneDemandRepository.findById(payment.getDemandId())
+                    .orElse(null);
+
+            if (demand != null) {
+                dto.setDemandOrigin(demand.getOrigin());
+                dto.setDemandCarType(demand.getCarType());
+            }
+
+            return dto;
+        });
+    }
+
+    /**
      * Obtiene los pagos de un operador especifico (pagos de sus demandas completadas)
-     *
-     * @param requestingUserEmail ID del usuario que hace la solicitud (para validación)
-     * @param status              Estado del pago (opcional: PENDING, VERIFIED, REJECTED)
-     * @param pageable            Parámetros de paginación
+     * @param requestingUserEmail Email del usuario que hace la solicitud (para validación)
+     * @param status Estado del pago (opcional: PENDING, VERIFIED, REJECTED)
+     * @param pageable Parámetros de paginación
      */
     public Page<PaymentResponseDto> getOperatorPayments(String requestingUserEmail, String status, Pageable pageable) {
         log.info("Obteniendo pagos para operador: {})", requestingUserEmail);
@@ -208,7 +241,7 @@ public class PaymentService {
      * Verifica un pago (administradores u operadores de la demanda)
      */
     public PaymentResponseDto verifyPayment(String paymentId, PaymentVerifyRequestDto dto, String verifiedByUserEmail) {
-        log.info("Verificando pago: {} por usuario: {}", paymentId, verifiedByUserEmail);
+        log.info("Verificando pago: {} con estado: {}", paymentId, dto.getStatus());
 
         Payment payment = paymentRepository.findById(paymentId)
                 .orElseThrow(() -> new ServiceException("Pago no encontrado", HttpStatus.NOT_FOUND.value()));
@@ -228,13 +261,13 @@ public class PaymentService {
 
         // Validar que el estado sea válido
         if (!dto.getStatus().equals(PaymentStatusEnum.VERIFIED.name()) &&
-                !dto.getStatus().equals(PaymentStatusEnum.REJECTED.name())) {
+            !dto.getStatus().equals(PaymentStatusEnum.REJECTED.name())) {
             throw new ServiceException("Estado inválido. Debe ser VERIFIED o REJECTED", HttpStatus.BAD_REQUEST.value());
         }
 
         // Actualizar el pago
         payment.setStatus(dto.getStatus());
-        payment.setVerifiedByUserId(verifiedByUserEmail);
+        payment.setVerifiedByUserId(verifyingUser.getId());
         payment.setVerificationComments(dto.getVerificationComments());
         payment.setVerifiedAt(new Date());
         payment.setUpdatedAt(new Date());
@@ -270,7 +303,6 @@ public class PaymentService {
 
         return demand;
     }
-
 
     /**
      * Envía notificación por email sobre la verificación del pago

@@ -115,6 +115,33 @@ public class PaymentController {
         return ResponseEntity.ok(payments);
     }
 
+    @GetMapping("/all")
+    @Operation(
+            summary = "Obtener todos los pagos del sistema",
+            description = "Obtiene todos los pagos del sistema con paginación. Solo disponible para administradores."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Pagos obtenidos exitosamente"),
+            @ApiResponse(responseCode = "401", description = "No autenticado"),
+            @ApiResponse(responseCode = "403", description = "No autorizado (requiere rol de administrador)")
+    })
+    public ResponseEntity<Page<PaymentResponseDto>> getAllPayments(
+            @Parameter(description = "Estado del pago (PENDING, VERIFIED, REJECTED)") @RequestParam(required = false) String status,
+            @Parameter(description = "Número de página") @RequestParam(defaultValue = "0") int page,
+            @Parameter(description = "Tamaño de página") @RequestParam(defaultValue = "10") int size,
+            HttpServletRequest request
+    ) {
+        // Obtener el ID del usuario autenticado usando RequestMetadataExtractorUtil
+        var meta = RequestMetadataExtractorUtil.extract(request);
+        String authenticatedUserId = meta.getUserId();
+        log.info("Obteniendo todos los pagos (solicitado por: {})", authenticatedUserId);
+
+        Pageable pageable = PageRequest.of(page, size);
+        Page<PaymentResponseDto> payments = paymentService.getAllPayments(status, pageable);
+
+        return ResponseEntity.ok(payments);
+    }
+
     @GetMapping("/{id}")
     @Operation(
             summary = "Obtener detalles de un pago",

@@ -28,6 +28,11 @@ public interface PaymentRepository extends MongoRepository<Payment, String> {
     Page<Payment> findByStatus(String status, Pageable pageable);
 
     /**
+     * Buscar todos los pagos con paginación
+     */
+    Page<Payment> findAll(Pageable pageable);
+
+    /**
      * Buscar pagos por usuario y estado
      */
     Page<Payment> findByUserIdAndStatus(String userId, String status, Pageable pageable);
