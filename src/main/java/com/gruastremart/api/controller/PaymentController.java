@@ -4,6 +4,8 @@ import com.gruastremart.api.dto.PaymentCreateRequestDto;
 import com.gruastremart.api.dto.PaymentResponseDto;
 import com.gruastremart.api.dto.PaymentVerifyRequestDto;
 import com.gruastremart.api.service.PaymentService;
+import com.gruastremart.api.utils.tools.RequestMetadataExtractorUtil;
+import jakarta.servlet.http.HttpServletRequest;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -20,7 +22,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -49,7 +50,7 @@ public class PaymentController {
     })
     public ResponseEntity<Map<String, Object>> registerPayment(
             @Valid @ModelAttribute PaymentCreateRequestDto dto,
-            Authentication authentication
+            HttpServletRequest request
     ) {
         log.info("Solicitud de registro de pago para demanda: {}", dto.getDemandId());
 
@@ -77,12 +78,39 @@ public class PaymentController {
             @Parameter(description = "Estado del pago (PENDING, VERIFIED, REJECTED)") @RequestParam(required = false) String status,
             @Parameter(description = "Número de página") @RequestParam(defaultValue = "0") int page,
             @Parameter(description = "Tamaño de página") @RequestParam(defaultValue = "10") int size,
-            Authentication authentication
+            HttpServletRequest request
     ) {
         log.info("Obteniendo historial de pagos para usuario: {}", userId);
 
         Pageable pageable = PageRequest.of(page, size);
         Page<PaymentResponseDto> payments = paymentService.getPaymentHistory(userId, status, pageable);
+
+        return ResponseEntity.ok(payments);
+    }
+
+    @GetMapping("/operator/{operatorId}")
+    @Operation(
+            summary = "Obtener pagos de un operador",
+            description = "Obtiene los pagos de las demandas completadas por un operador específico. Los operadores solo pueden ver sus propios pagos."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Pagos del operador obtenidos exitosamente"),
+            @ApiResponse(responseCode = "401", description = "No autenticado"),
+            @ApiResponse(responseCode = "403", description = "No autorizado (solo el operador puede ver sus propios pagos o un administrador)")
+    })
+    public ResponseEntity<Page<PaymentResponseDto>> getOperatorPayments(
+            @Parameter(description = "Estado del pago (PENDING, VERIFIED, REJECTED)") @RequestParam(required = false) String status,
+            @Parameter(description = "Número de página") @RequestParam(defaultValue = "0") int page,
+            @Parameter(description = "Tamaño de página") @RequestParam(defaultValue = "10") int size,
+            HttpServletRequest request
+    ) {
+        // Obtener el ID del usuario autenticado usando RequestMetadataExtractorUtil
+        var meta = RequestMetadataExtractorUtil.extract(request);
+        String authenticatedUserEmail = meta.getEmail();
+        log.info("Obteniendo pagos para operador: {} )", authenticatedUserEmail);
+
+        Pageable pageable = PageRequest.of(page, size);
+        Page<PaymentResponseDto> payments = paymentService.getOperatorPayments(authenticatedUserEmail, status, pageable);
 
         return ResponseEntity.ok(payments);
     }
@@ -100,7 +128,7 @@ public class PaymentController {
     })
     public ResponseEntity<PaymentResponseDto> getPaymentById(
             @Parameter(description = "ID del pago") @PathVariable String id,
-            Authentication authentication
+            HttpServletRequest request
     ) {
         log.info("Obteniendo detalles del pago: {}", id);
 
@@ -112,7 +140,7 @@ public class PaymentController {
     @PatchMapping("/{id}/verify")
     @Operation(
             summary = "Verificar o rechazar un pago",
-            description = "Permite a un administrador verificar o rechazar un pago. Requiere rol de administrador."
+            description = "Permite a un administrador u operador verificar o rechazar un pago. El operador solo puede verificar pagos de sus propias demandas completadas."
     )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Pago actualizado exitosamente",
@@ -120,19 +148,20 @@ public class PaymentController {
             @ApiResponse(responseCode = "400", description = "Estado inválido"),
             @ApiResponse(responseCode = "404", description = "Pago no encontrado"),
             @ApiResponse(responseCode = "401", description = "No autenticado"),
-            @ApiResponse(responseCode = "403", description = "No autorizado (requiere rol admin)")
+            @ApiResponse(responseCode = "403", description = "No autorizado (requiere rol admin o ser el operador asignado)")
     })
     public ResponseEntity<Map<String, Object>> verifyPayment(
             @Parameter(description = "ID del pago") @PathVariable String id,
             @Valid @RequestBody PaymentVerifyRequestDto dto,
-            Authentication authentication
+            HttpServletRequest request
     ) {
         log.info("Verificando pago: {} con estado: {}", id, dto.getStatus());
 
-        // Obtener el ID del usuario autenticado (administrador)
-        String verifiedByUserId = authentication.getName(); // O extraer del token JWT
+        // Obtener el ID del usuario autenticado usando RequestMetadataExtractorUtil
+        var meta = RequestMetadataExtractorUtil.extract(request);
+        String verifiedByUserEmail = meta.getEmail();
 
-        PaymentResponseDto payment = paymentService.verifyPayment(id, dto, verifiedByUserId);
+        PaymentResponseDto payment = paymentService.verifyPayment(id, dto, verifiedByUserEmail);
 
         Map<String, Object> response = new HashMap<>();
         response.put("success", true);
@@ -145,25 +174,26 @@ public class PaymentController {
     @PatchMapping("/{id}/reject")
     @Operation(
             summary = "Rechazar un pago",
-            description = "Permite a un administrador rechazar un pago. Requiere rol de administrador."
+            description = "Permite a un administrador u operador rechazar un pago. El operador solo puede rechazar pagos de sus propias demandas completadas."
     )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Pago rechazado exitosamente",
                     content = @Content(schema = @Schema(implementation = PaymentResponseDto.class))),
             @ApiResponse(responseCode = "404", description = "Pago no encontrado"),
             @ApiResponse(responseCode = "401", description = "No autenticado"),
-            @ApiResponse(responseCode = "403", description = "No autorizado (requiere rol admin)")
+            @ApiResponse(responseCode = "403", description = "No autorizado (requiere rol admin o ser el operador asignado)")
     })
     public ResponseEntity<Map<String, Object>> rejectPayment(
             @Parameter(description = "ID del pago") @PathVariable String id,
             @Valid @RequestBody PaymentVerifyRequestDto dto,
-            Authentication authentication
+            HttpServletRequest request
     ) {
         log.info("Rechazando pago: {}", id);
 
-        String verifiedByUserId = authentication.getName();
+        var meta = RequestMetadataExtractorUtil.extract(request);
+        String verifiedByUserEmail = meta.getEmail();
 
-        PaymentResponseDto payment = paymentService.rejectPayment(id, dto, verifiedByUserId);
+        PaymentResponseDto payment = paymentService.rejectPayment(id, dto, verifiedByUserEmail);
 
         Map<String, Object> response = new HashMap<>();
         response.put("success", true);

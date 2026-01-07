@@ -33,6 +33,12 @@ public class LocalImageStorageService implements ImageStorageService {
     @Value("${app.image.upload-dir:uploads/}")
     private String uploadDir;
 
+    @Value("${app.image.server-url:http://localhost:8080}")
+    private String serverUrl;
+
+    @Value("${server.servlet.context-path:/}")
+    private String contextPath;
+
     @Override
     public String saveImage(MultipartFile file, String context) {
         try {
@@ -44,7 +50,7 @@ public class LocalImageStorageService implements ImageStorageService {
 
             // Generar nombre único para el archivo
             String originalFilename = file.getOriginalFilename();
-            String fileExtension = originalFilename != null ? 
+            String fileExtension = originalFilename != null ?
                     originalFilename.substring(originalFilename.lastIndexOf(".")) : ".jpg";
             String uniqueFilename = "payment_" + context + "_" + UUID.randomUUID() + fileExtension;
 
@@ -53,9 +59,14 @@ public class LocalImageStorageService implements ImageStorageService {
             Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
 
             log.info("Imagen de pago guardada localmente: {}", filePath);
+            log.info("Configuración - serverUrl: {}, contextPath: {}, uploadDir: {}, uniqueFilename: {}",
+                    serverUrl, contextPath, uploadDir, uniqueFilename);
 
-            // Retornar la URL relativa
-            return uploadDir + uniqueFilename;
+            // Construir la URL completa
+            String fullUrl = serverUrl + contextPath + "/" + uploadDir + uniqueFilename;
+            log.info("URL de imagen generada: {}", fullUrl);
+
+            return fullUrl;
 
         } catch (IOException e) {
             log.error("Error al guardar imagen de pago localmente: {}", e.getMessage());

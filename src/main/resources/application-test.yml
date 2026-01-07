@@ -9,6 +9,11 @@ spring:
   web:
     resources:
       add-mappings: true
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 10MB
+      max-request-size: 10MB
   mail:
     protocol: smtp
     host: smtp.gmail.com
@@ -31,15 +36,17 @@ spring:
 app:
   security:
     supabaseSecret: ${SUPABASE_SECURITY_SECRET_KEY}
+    supabaseServiceRoleKey: ${SUPABASE_SERVICE_ROLE_KEY}
     supabaseUrl: ${SUPABASE_URL}
+    recoverRedirect: ${SUPABASE_RECOVER_REDIRECT_URL}
   image:
     storage: cloudinary
+  mailer:
+    from: "job.jesus.1702@gmail.com"
+    to: "tremartca@gmail.com"
+    contact-subject: "Nuevo mensaje de contacto (Test)"
+    demand-subject: "Solicitud de Atención Asignada (Test)"
 cloudinary:
   cloud-name: ${CLOUDINARY_CLOUD_NAME}
   api-key: ${CLOUDINARY_API_KEY}
   api-secret: ${CLOUDINARY_API_SECRET}
-mailer:
-  from: "job.jesus.1702@gmail.com"
-  to: "tremartca@gmail.com"
-  contact-subject: "Nuevo mensaje de contacto (Test)"
-  demand-subject: "Solicitud de Atención Asignada (Test)"

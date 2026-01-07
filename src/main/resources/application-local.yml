@@ -1,3 +1,8 @@
+server:
+  port: 8080
+  servlet:
+    context-path: /gruastremart-core-api
+
 spring:
   jackson:
     default-property-inclusion: NON_NULL
@@ -10,6 +15,11 @@ spring:
   web:
     resources:
       add-mappings: true
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 10MB
+      max-request-size: 10MB
   mail:
     protocol: smtp
     host: smtp.gmail.com
@@ -32,16 +42,18 @@ spring:
 app:
   security:
     supabaseSecret: ${SUPABASE_SECURITY_SECRET_KEY}
-    supabaseServiceRoleKey: ${SUPABASE_SERVICE_ROLE_KEY}
     supabaseUrl: ${SUPABASE_URL}
-    recoverRedirect: ${SUPABASE_RECOVER_REDIRECT_URL:}
+    supabaseAnonKey: ${SUPABASE_ANON_KEY}
   image:
-    storage: local
-    upload-dir: uploads/payments/
+    storage: cloudinary
+cloudinary:
+  cloud-name: ${CLOUDINARY_CLOUD_NAME}
+  api-key: ${CLOUDINARY_API_KEY}
+  api-secret: ${CLOUDINARY_API_SECRET}
 mailer:
   from: "job.jesus.1702@gmail.com"
   to: "tremartca@gmail.com"
-  contact-subject: "Nuevo mensaje de contacto (Prueba / Local)"
-  demand-subject: "Solicitud de Atención Asignada (Prueba / Local)"
+  contact-subject: "Nuevo mensaje de contacto (LOCAL)"
+  demand-subject: "Solicitud de Atención Asignada"
 redirect:
   forgot-password-url: ${EMAIL_FORGOT_PASSWORD_LINK}

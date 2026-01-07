@@ -19,17 +19,24 @@ import java.util.Map;
 )
 public class CloudinaryConfig {
 
-    @Value("${cloudinary.cloud-name}")
+    @Value("${cloudinary.cloud-name:}")
     private String cloudName;
 
-    @Value("${cloudinary.api-key}")
+    @Value("${cloudinary.api-key:}")
     private String apiKey;
 
-    @Value("${cloudinary.api-secret}")
+    @Value("${cloudinary.api-secret:}")
     private String apiSecret;
 
     @Bean
     public Cloudinary cloudinary() {
+        if (cloudName == null || cloudName.isEmpty() || apiKey == null || apiKey.isEmpty()) {
+            throw new IllegalArgumentException(
+                "No se pudieron cargar las credenciales de Cloudinary. " +
+                "Verifica que las variables de entorno CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY y CLOUDINARY_API_SECRET están definidas en el archivo .env"
+            );
+        }
+
         Map<String, String> config = new HashMap<>();
         config.put("cloud_name", cloudName);
         config.put("api_key", apiKey);
