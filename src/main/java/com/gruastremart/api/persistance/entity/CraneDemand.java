@@ -40,6 +40,10 @@ public class CraneDemand {
     private String vehiclePlate;
     private String vehicleColor;
 
+    // Customer contact information
+    private String customerName;
+    private String customerPhone;
+
     // Pricing information
     private String assignedWeightCategoryId;
     

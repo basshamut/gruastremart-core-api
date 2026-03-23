@@ -46,4 +46,14 @@ public interface PaymentRepository extends MongoRepository<Payment, String> {
      * Verificar si existe un pago para una demanda
      */
     boolean existsByDemandId(String demandId);
+
+    /**
+     * Verificar si un usuario tiene pagos pendientes de un tipo específico
+     */
+    boolean existsByUserIdAndStatusAndPaymentType(String userId, String status, String paymentType);
+
+    /**
+     * Obtener pagos por estado y tipo con paginación
+     */
+    Page<Payment> findByStatusAndPaymentType(String status, String paymentType, Pageable pageable);
 }

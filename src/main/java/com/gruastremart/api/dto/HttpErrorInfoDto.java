@@ -1,5 +1,7 @@
 package com.gruastremart.api.dto;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
@@ -10,6 +12,8 @@ import java.time.ZonedDateTime;
 @Getter
 @ToString
 @NoArgsConstructor(force = true)
+@AllArgsConstructor
+@Builder
 public class HttpErrorInfoDto {
 
     private final String timestamp;

@@ -9,7 +9,7 @@ import com.gruastremart.api.persistance.repository.OperatorRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CachePut;
-import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.CacheManager;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -23,6 +23,7 @@ import static com.gruastremart.api.utils.constants.Constants.OPERATOR_LOCATIONS_
 public class OperatorService {
 
     private final OperatorRepository operatorRepository;
+    private final CacheManager cacheManager;
 
     @CachePut(value = OPERATOR_LOCATIONS_CACHE, key = "#operatorId", cacheManager = "operatorLocationsCacheManager")
     public OperatorLocationDto saveOperatorLocation(String operatorId, OperatorLocationRequestDto request) {
@@ -42,10 +43,19 @@ public class OperatorService {
         return location;
     }
 
-    @Cacheable(value = OPERATOR_LOCATIONS_CACHE, key = "#operatorId", cacheManager = "operatorLocationsCacheManager")
     public Optional<OperatorLocationDto> getOperatorLocation(String operatorId) {
         log.debug("Buscando localización del operador en cache: {}", operatorId);
-
+        
+        var cache = cacheManager.getCache(OPERATOR_LOCATIONS_CACHE);
+        if (cache == null) {
+            return Optional.empty();
+        }
+        
+        var wrapper = cache.get(operatorId);
+        if (wrapper != null) {
+            return Optional.of((OperatorLocationDto) wrapper.get());
+        }
+        
         return Optional.empty();
     }
 

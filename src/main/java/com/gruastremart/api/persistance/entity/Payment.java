@@ -18,9 +18,16 @@ public class Payment {
     @Id
     private String id;
     
-    // Relación con la demanda de grúa
+    // Relación con la demanda de grúa (nullable para pagos pre-servicio)
     private String demandId;
-    
+
+    // Tipo de pago: PRE_SERVICE o POST_SERVICE
+    private String paymentType;
+
+    // Datos de la solicitud pendiente (JSON serializado) para pagos PRE_SERVICE
+    // Se usa hasta que el pago sea verificado y se cree la demanda
+    private String pendingDemandData;
+
     // Usuario que realiza el pago
     private String userId;
     

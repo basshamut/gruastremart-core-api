@@ -1,6 +1,9 @@
 package com.gruastremart.api.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.gruastremart.api.dto.CraneDemandCreateRequestDto;
 import com.gruastremart.api.dto.PaymentCreateRequestDto;
+import com.gruastremart.api.dto.PaymentPreServiceRequestDto;
 import com.gruastremart.api.dto.PaymentResponseDto;
 import com.gruastremart.api.dto.PaymentVerifyRequestDto;
 import com.gruastremart.api.service.PaymentService;
@@ -35,6 +38,7 @@ import java.util.Map;
 public class PaymentController {
 
     private final PaymentService paymentService;
+    private final ObjectMapper objectMapper;
 
     @PostMapping(value = "/register", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(
@@ -62,6 +66,64 @@ public class PaymentController {
         response.put("data", payment);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @PostMapping(value = "/submit-pre-service", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(
+            summary = "Enviar pago pre-servicio",
+            description = "Registra un pago antes de crear la solicitud de grúa. El pago quedará pendiente de verificación y la solicitud se creará automáticamente al aprobar el pago."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "Pago pre-servicio registrado exitosamente",
+                    content = @Content(schema = @Schema(implementation = PaymentResponseDto.class))),
+            @ApiResponse(responseCode = "400", description = "Datos inválidos o usuario ya tiene pago/solicitud pendiente"),
+            @ApiResponse(responseCode = "401", description = "No autenticado")
+    })
+    public ResponseEntity<Map<String, Object>> submitPreServicePayment(
+            @RequestParam("userId") String userId,
+            @RequestParam("mobilePaymentReference") String reference,
+            @RequestParam("amount") String amountStr,
+            @RequestPart("paymentImage") org.springframework.web.multipart.MultipartFile image,
+            @RequestParam("demandData") String demandDataJson,
+            HttpServletRequest request
+    ) {
+        log.info("Solicitud de pago pre-servicio para usuario: {}", userId);
+
+        try {
+            // Parse demandData JSON
+            CraneDemandCreateRequestDto demandData = objectMapper.readValue(
+                demandDataJson,
+                CraneDemandCreateRequestDto.class
+            );
+
+            // Construir DTO
+            PaymentPreServiceRequestDto dto = PaymentPreServiceRequestDto.builder()
+                .userId(userId)
+                .mobilePaymentReference(reference)
+                .amount(Double.parseDouble(amountStr))
+                .paymentImage(image)
+                .demandData(demandData)
+                .build();
+
+            // Registrar pago pre-servicio
+            PaymentResponseDto payment = paymentService.submitPreServicePayment(dto);
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("message", "Pago registrado exitosamente. Espera la verificación para que tu solicitud sea activada.");
+            response.put("data", payment);
+
+            return ResponseEntity.status(HttpStatus.CREATED).body(response);
+
+        } catch (Exception e) {
+            log.error("Error al procesar pago pre-servicio", e);
+
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("success", false);
+            errorResponse.put("message", "Error al procesar el pago: " + e.getMessage());
+
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+        }
     }
 
     @GetMapping

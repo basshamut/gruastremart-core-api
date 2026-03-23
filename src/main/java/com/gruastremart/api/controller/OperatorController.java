@@ -4,6 +4,7 @@ import com.gruastremart.api.dto.HttpErrorInfoDto;
 import com.gruastremart.api.dto.OperatorDto;
 import com.gruastremart.api.dto.OperatorLocationDto;
 import com.gruastremart.api.dto.OperatorLocationRequestDto;
+import com.gruastremart.api.exception.ServiceException;
 import com.gruastremart.api.service.OperatorService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -78,8 +79,9 @@ public class OperatorController {
 
         Optional<OperatorLocationDto> location = operatorService.getOperatorLocation(operatorId);
 
-        return location.map(loc -> new ResponseEntity<>(loc, HttpStatus.OK))
-                .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
+        return location
+                .map(loc -> new ResponseEntity<>(loc, HttpStatus.OK))
+                .orElseThrow(() -> new ServiceException("Operator location not found", HttpStatus.NOT_FOUND.value()));
     }
 
     @Operation(summary = "Check Operator Location Status", description = "Verify if an operator has location data stored in cache")

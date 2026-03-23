@@ -1,6 +1,9 @@
 package com.gruastremart.api.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.gruastremart.api.dto.CraneDemandCreateRequestDto;
 import com.gruastremart.api.dto.PaymentCreateRequestDto;
+import com.gruastremart.api.dto.PaymentPreServiceRequestDto;
 import com.gruastremart.api.dto.PaymentResponseDto;
 import com.gruastremart.api.dto.PaymentVerifyRequestDto;
 import com.gruastremart.api.exception.ServiceException;
@@ -14,6 +17,7 @@ import com.gruastremart.api.persistance.repository.UserRepository;
 import com.gruastremart.api.service.storage.ImageStorageService;
 import com.gruastremart.api.utils.enums.CraneDemandStateEnum;
 import com.gruastremart.api.utils.enums.PaymentStatusEnum;
+import com.gruastremart.api.utils.enums.PaymentTypeEnum;
 import com.gruastremart.api.utils.enums.Role;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -40,6 +44,8 @@ public class PaymentService {
     private final EmailService emailService;
     private final ImageStorageService imageStorageService;
     private final UserRepository userRepository;
+    private final CraneDemandService craneDemandService;
+    private final ObjectMapper objectMapper;
 
     /**
      * Registra un nuevo pago para una demanda completada
@@ -81,6 +87,56 @@ public class PaymentService {
         log.info("Pago registrado exitosamente con ID: {}", savedPayment.getId());
 
         return paymentMapper.toResponseDto(savedPayment);
+    }
+
+    /**
+     * Registra un pago pre-servicio (antes de crear la demanda)
+     * El pago queda pendiente de verificación y la demanda se creará automáticamente al verificar
+     */
+    public PaymentResponseDto submitPreServicePayment(PaymentPreServiceRequestDto dto) {
+        log.info("Registrando pago pre-servicio para usuario: {}", dto.getUserId());
+
+        try {
+            // Validar que el usuario no tenga un pago pendiente de verificación
+            validateUserHasNoPendingPayment(dto.getUserId());
+
+            // Validar que el usuario no tenga solicitudes activas/tomadas
+            validateUserHasNoActiveDemand(dto.getUserId());
+
+            // Serializar demandData a JSON
+            String demandDataJson = objectMapper.writeValueAsString(dto.getDemandData());
+
+            // Guardar imagen del comprobante en Cloudinary
+            String imageUrl = imageStorageService.saveImage(
+                dto.getPaymentImage(),
+                "pre-service-" + dto.getUserId()
+            );
+
+            // Crear Payment con demandId = null (se llenará al verificar)
+            Payment payment = Payment.builder()
+                .userId(dto.getUserId())
+                .mobilePaymentReference(dto.getMobilePaymentReference())
+                .paymentImageUrl(imageUrl)
+                .amount(dto.getAmount())
+                .status(PaymentStatusEnum.PENDING.name())
+                .paymentType(PaymentTypeEnum.PRE_SERVICE.name())
+                .pendingDemandData(demandDataJson)
+                .demandId(null)  // No hay demanda todavía
+                .createdAt(new Date())
+                .updatedAt(new Date())
+                .build();
+
+            // Guardar en DB
+            Payment savedPayment = paymentRepository.save(payment);
+
+            log.info("Pago pre-servicio registrado exitosamente: {}", savedPayment.getId());
+
+            return paymentMapper.toResponseDto(savedPayment);
+
+        } catch (Exception e) {
+            log.error("Error al procesar pago pre-servicio", e);
+            throw new ServiceException("Error al procesar el pago: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR.value());
+        }
     }
 
     /**
@@ -246,17 +302,20 @@ public class PaymentService {
         Payment payment = paymentRepository.findById(paymentId)
                 .orElseThrow(() -> new ServiceException("Pago no encontrado", HttpStatus.NOT_FOUND.value()));
 
-        // Obtener la demanda asociada
-        CraneDemand demand = craneDemandRepository.findById(payment.getDemandId())
-                .orElseThrow(() -> new ServiceException("Demanda no encontrada", HttpStatus.NOT_FOUND.value()));
-
         // Obtener el usuario que está verificando
         User verifyingUser = userRepository.findByEmail(verifiedByUserEmail)
                 .orElseThrow(() -> new ServiceException("Usuario no encontrado", HttpStatus.NOT_FOUND.value()));
 
-        // Validar permisos: Los OPERATOR solo pueden verificar pagos de sus propias demandas
-        if (verifyingUser.getRole() != Role.OPERATOR) {
-            throw new ServiceException("Un operador solo puede verificar pagos de sus propias demandas", HttpStatus.FORBIDDEN.value());
+        // Para pagos POST_SERVICE, validar que existe la demanda y permisos
+        if (PaymentTypeEnum.POST_SERVICE.name().equals(payment.getPaymentType()) || payment.getPaymentType() == null) {
+            // Obtener la demanda asociada
+            CraneDemand demand = craneDemandRepository.findById(payment.getDemandId())
+                    .orElseThrow(() -> new ServiceException("Demanda no encontrada", HttpStatus.NOT_FOUND.value()));
+
+            // Validar permisos: Los OPERATOR solo pueden verificar pagos de sus propias demandas
+            if (verifyingUser.getRole() != Role.OPERATOR) {
+                throw new ServiceException("Un operador solo puede verificar pagos de sus propias demandas", HttpStatus.FORBIDDEN.value());
+            }
         }
 
         // Validar que el estado sea válido
@@ -271,6 +330,39 @@ public class PaymentService {
         payment.setVerificationComments(dto.getVerificationComments());
         payment.setVerifiedAt(new Date());
         payment.setUpdatedAt(new Date());
+
+        // NUEVO: Si es pago pre-servicio VERIFICADO, crear la demanda automáticamente
+        if (PaymentTypeEnum.PRE_SERVICE.name().equals(payment.getPaymentType())
+            && payment.getPendingDemandData() != null
+            && dto.getStatus().equals(PaymentStatusEnum.VERIFIED.name())) {
+
+            try {
+                log.info("Creando demanda automáticamente desde pago verificado: {}", paymentId);
+
+                // Deserializar los datos de la demanda
+                CraneDemandCreateRequestDto demandData = objectMapper.readValue(
+                    payment.getPendingDemandData(),
+                    CraneDemandCreateRequestDto.class
+                );
+
+                // Crear la demanda de grúa
+                CraneDemand demand = craneDemandService.createCraneDemandFromPayment(
+                    demandData,
+                    payment.getUserId(),
+                    payment.getId()
+                );
+
+                // Actualizar el payment con el ID de la demanda creada
+                payment.setDemandId(demand.getId());
+
+                log.info("Demanda creada automáticamente: {}", demand.getId());
+
+            } catch (Exception e) {
+                log.error("Error al crear demanda desde pago verificado", e);
+                // No lanzar excepción - el pago quedará verificado pero sin demanda
+                // Se puede re-intentar manualmente desde admin
+            }
+        }
 
         Payment updatedPayment = paymentRepository.save(payment);
 
@@ -302,6 +394,44 @@ public class PaymentService {
         }
 
         return demand;
+    }
+
+    /**
+     * Valida que el usuario no tenga un pago PRE_SERVICE pendiente de verificación
+     */
+    private void validateUserHasNoPendingPayment(String userId) {
+        boolean hasPendingPayment = paymentRepository.existsByUserIdAndStatusAndPaymentType(
+            userId,
+            PaymentStatusEnum.PENDING.name(),
+            PaymentTypeEnum.PRE_SERVICE.name()
+        );
+
+        if (hasPendingPayment) {
+            throw new ServiceException(
+                "Ya tienes un pago pendiente de verificación. Espera a que sea aprobado.",
+                HttpStatus.BAD_REQUEST.value()
+            );
+        }
+    }
+
+    /**
+     * Valida que el usuario no tenga demandas activas o tomadas
+     */
+    private void validateUserHasNoActiveDemand(String userId) {
+        List<CraneDemand> activeDemands = craneDemandRepository.findByCreatedByUserId(userId);
+
+        boolean hasActiveDemand = activeDemands.stream()
+            .anyMatch(demand ->
+                demand.getState().equals(CraneDemandStateEnum.ACTIVE.name()) ||
+                demand.getState().equals(CraneDemandStateEnum.TAKEN.name())
+            );
+
+        if (hasActiveDemand) {
+            throw new ServiceException(
+                "Ya tienes una solicitud activa o asignada. Completa o cancela tu solicitud actual antes de crear una nueva.",
+                HttpStatus.BAD_REQUEST.value()
+            );
+        }
     }
 
     /**
