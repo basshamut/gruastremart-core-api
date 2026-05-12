@@ -72,6 +72,35 @@ public class CraneDemandService {
         return CraneDemandMapper.MAPPER.mapToDto(saved);
     }
 
+    /**
+     * Crea una demanda de grúa desde un pago pre-servicio verificado
+     * Este método es llamado automáticamente cuando se verifica un pago PRE_SERVICE
+     */
+    public CraneDemand createCraneDemandFromPayment(
+        CraneDemandCreateRequestDto dto,
+        String userId,
+        String paymentId
+    ) {
+        log.info("Creando demanda desde pago verificado: {} para usuario: {}", paymentId, userId);
+
+        // Convertir DTO a entidad usando el mapper
+        var craneDemand = CraneDemandMapper.MAPPER.mapToEntity(dto);
+
+        // Establecer datos del sistema
+        craneDemand.setCreatedByUserId(userId);
+        craneDemand.setState(CraneDemandStateEnum.ACTIVE.name());
+        craneDemand.setPaymentId(paymentId);  // Vincular con el pago
+        craneDemand.setCreatedAt(new Date());
+        craneDemand.setUpdatedAt(new Date());
+
+        // Guardar en DB
+        CraneDemand saved = craneDemandRepository.save(craneDemand);
+
+        log.info("Demanda creada exitosamente desde pago: {} con ID: {}", paymentId, saved.getId());
+
+        return saved;
+    }
+
     private void validateUserHasNoActiveDemand(String userId) {
         var demands = craneDemandRepository.findByCreatedByUserId(userId);
         if (demands.stream().anyMatch(CraneDemand::isActiveOrTaken)) {
