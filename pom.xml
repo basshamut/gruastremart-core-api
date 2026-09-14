@@ -80,13 +80,6 @@
             <version>${spring.boot.version}</version>
         </dependency>
 
-        <!-- Dotenv Java for loading .env files -->
-        <dependency>
-            <groupId>io.github.cdimascio</groupId>
-            <artifactId>dotenv-java</artifactId>
-            <version>3.0.0</version>
-        </dependency>
-
         <!-- Spring Boot Starter Mail -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -104,13 +97,6 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>
             <version>${spring.boot.version}</version>
-        </dependency>
-
-        <!-- Micrometer Prometheus Registry -->
-        <dependency>
-            <groupId>io.micrometer</groupId>
-            <artifactId>micrometer-registry-prometheus</artifactId>
-            <version>1.11.4</version>
         </dependency>
 
         <!-- Feign Apache HttpClient -->

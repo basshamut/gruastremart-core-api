@@ -16,7 +16,6 @@ import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.web.servlet.handler.HandlerMappingIntrospector;
 
 import static com.gruastremart.api.utils.constants.Constants.ACTUATOR_PATH;
-import static com.gruastremart.api.utils.constants.Constants.ACTUATOR_PATHS;
 import static com.gruastremart.api.utils.constants.Constants.ERROR_PATH;
 import static com.gruastremart.api.utils.constants.Constants.FORGOT_PASSWORD_URL;
 import static com.gruastremart.api.utils.constants.Constants.H2_CONSOLE_PATH;
@@ -50,8 +49,7 @@ public class SecurityConfig {
             SEND_CONTACTFORM_URL,
             REGISTER_FORM_URL,
             FORGOT_PASSWORD_URL,
-            RESET_PASSWORD_URL,
-            ACTUATOR_PATHS
+            RESET_PASSWORD_URL
     };
 
     private static final String[] NON_MVC_WHITE_LIST = {

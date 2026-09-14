@@ -4,33 +4,71 @@ server:
     context-path: /gruastremart-core-api
 
 spring:
-  profiles:
-    active: ${SPRING_PROFILES_ACTIVE:local}
-    include: observability
   application:
     name: gruastremart-core-api
+  jackson:
+    default-property-inclusion: NON_NULL
+  data:
+    mongodb:
+      uri: ${MONGODB_URI}
   web:
     resources:
       add-mappings: true
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 10MB
+      max-request-size: 10MB
+  mail:
+    protocol: smtp
+    host: ${SMTP_HOST:smtp.gmail.com}
+    port: ${SMTP_PORT:587}
+    username: ${EMAIL_USER}
+    password: ${EMAIL_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+          timeout: 60000
+          writetimeout: 60000
+          connectiontimeout: 60000
+          ssl:
+            protocols: TLSv1.2
+          debug: ${MAIL_DEBUG:false}
 
 management:
   endpoints:
     web:
       exposure:
-        include: health,info,prometheus,metrics,traces
+        include: health
       base-path: /actuator
       path-mapping:
         health: health
-  metrics:
-    export:
-      prometheus:
-        enabled: true
   endpoint:
-    prometheus:
-      enabled: true
     health:
       show-details: always
-  tracing:
-    enabled: true
-    sampling:
-      probability: 1.0
+
+app:
+  security:
+    supabaseSecret: ${SUPABASE_SECURITY_SECRET_KEY}
+    supabaseUrl: ${SUPABASE_URL}
+    supabaseAnonKey: ${SUPABASE_ANON_KEY}
+  image:
+    storage: ${IMAGE_STORAGE:cloudinary}
+
+cloudinary:
+  cloud-name: ${CLOUDINARY_CLOUD_NAME}
+  api-key: ${CLOUDINARY_API_KEY}
+  api-secret: ${CLOUDINARY_API_SECRET}
+
+mailer:
+  from: ${MAILER_FROM}
+  to: ${MAILER_TO}
+  contact-subject: ${MAILER_CONTACT_SUBJECT}
+  demand-subject: ${MAILER_DEMAND_SUBJECT}
+
+redirect:
+  forgot-password-url: ${EMAIL_FORGOT_PASSWORD_LINK}

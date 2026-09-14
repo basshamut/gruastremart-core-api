@@ -117,8 +117,9 @@ Sistema de autenticación y gestión de usuarios integrado con Supabase.
 - **Cliente Feign**: Comunicación optimizada con APIs de Supabase
 
 #### Endpoints:
-- `POST /api/v1/auth/recover` - Iniciar recuperación de contraseña
-- `PUT /api/v1/auth/change-password` - Cambiar contraseña del usuario
+- `POST /api/v1/auth/forgot-password` - Iniciar recuperación de contraseña
+- `POST /api/v1/auth/reset-password` - Restablecer contraseña
+- `POST /api/v1/auth/change-password` - Cambiar contraseña del usuario
 
 ### 🔄 8. Comunicación en Tiempo Real
 
@@ -136,6 +137,28 @@ Sistema de comunicación bidireccional entre frontend y backend.
 - Notificaciones de nuevas asignaciones
 - Tracking de ubicación de operadores en tiempo real
 - Alertas de sistema y comunicaciones
+
+### 💳 9. Sistema de Pagos (`PaymentController`)
+
+Gestión de pagos del servicio con comprobantes y flujo de verificación.
+
+#### Características:
+- **Pago pre-servicio** (`submit-pre-service`): pago antes de la ejecución del servicio.
+- **Pago post-servicio** (`register`): flujo retrocompatible posterior al servicio.
+- **Comprobantes**: carga de imagen de pago vía `multipart/form-data` y almacenamiento en Cloudinary.
+- **Verificación/Rechazo**: el administrador aprueba (`verify`) o rechaza (`reject`) cada pago.
+- **Consultas**: listado general, por operador, y detalle.
+- **Estados**: `PENDING · VERIFIED · REJECTED`. **Tipos**: `PRE_SERVICE · POST_SERVICE`.
+
+#### Endpoints:
+- `POST /api/v1/payments/register` - Registrar pago post-servicio con comprobante
+- `POST /api/v1/payments/submit-pre-service` - Registrar pago pre-servicio
+- `GET /api/v1/payments` - Listar pagos con filtros
+- `GET /api/v1/payments/operator/{operatorId}` - Pagos de un operador
+- `GET /api/v1/payments/all` - Todos los pagos
+- `GET /api/v1/payments/{id}` - Detalle de un pago
+- `PATCH /api/v1/payments/{id}/verify` - Verificar/aprobar pago
+- `PATCH /api/v1/payments/{id}/reject` - Rechazar pago
 
 ## Arquitectura y Patrones
 
@@ -171,30 +194,45 @@ src/main/java/com/gruastremart/api/
 
 ### 🔧 Variables de Entorno
 
-La aplicación requiere las siguientes variables de entorno:
+La aplicación usa **un único `application.yml`**: todas las propiedades se resuelven desde variables de entorno (el perfil ya no se usa). Configuración completa en [`.env.example`](./.env.example).
 
 ```env
-# Perfil de Spring Boot
-SPRING_PROFILES_ACTIVE=des
-
 # Base de datos MongoDB
-MONGODB_DEV_URL=mongodb+srv://...
-MONGODB_TEST_URL=mongodb+srv://...
+MONGODB_URI=mongodb+srv://...
+MONGODB_TEST_URL=mongodb+srv://...   # Solo usada por tests de integración (Cucumber)
 
-# Configuración de Supabase
+# SMTP / email
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+EMAIL_USER=your_email@gmail.com
+EMAIL_PASSWORD=your_app_password
+EMAIL_FORGOT_PASSWORD_LINK=https://your-frontend.com/reset-password
+MAIL_DEBUG=false
+
+# Supabase
 SUPABASE_SECURITY_SECRET_KEY=your_secret_key
 SUPABASE_URL=https://your-project.supabase.co
 SUPABASE_ANON_KEY=your_anon_key
 
-# Configuración de email
-EMAIL_USER=your_email@gmail.com
-EMAIL_PASSWORD=your_app_password
-EMAIL_FORGOT_PASSWORD_LINK=https://your-frontend.com/reset-password
+# Cloudinary (app.image.storage=cloudinary)
+CLOUDINARY_CLOUD_NAME=your_cloud_name
+CLOUDINARY_API_KEY=your_api_key
+CLOUDINARY_API_SECRET=your_api_secret
+IMAGE_STORAGE=cloudinary
+
+# Mailer
+MAILER_FROM=your_email@gmail.com
+MAILER_TO=tremartca@gmail.com
+MAILER_CONTACT_SUBJECT=Nuevo mensaje de contacto
+MAILER_DEMAND_SUBJECT=Solicitud de Atención Asignada
+
+# Observabilidad (OpenTelemetry -> SigNoz)
+OTEL_EXPORTER_OTLP_ENDPOINT=http://signoz-otel-collector:4317
 ```
 
 ### 🐳 Docker
 
-La aplicación incluye un `Dockerfile` multi-stage optimizado:
+La aplicación incluye un `Dockerfile` multi-stage que incorpora el agente **OpenTelemetry Java**:
 
 ```bash
 # Construir imagen
@@ -202,61 +240,41 @@ docker build -t gruastremart-core-api:latest .
 
 # Ejecutar contenedor
 docker run -p 8080:8080 \
-  -e SPRING_PROFILES_ACTIVE=des \
-  -e MONGODB_DEV_URL=your_mongodb_url \
+  -e MONGODB_URI=your_mongodb_url \
+  -e EMAIL_USER=your_email@gmail.com \
+  -e EMAIL_PASSWORD=your_app_password \
+  -e SUPABASE_SECURITY_SECRET_KEY=your_secret_key \
+  -e SUPABASE_URL=https://your-project.supabase.co \
+  -e SUPABASE_ANON_KEY=your_anon_key \
+  -e EMAIL_FORGOT_PASSWORD_LINK=https://your-frontend.com/reset-password \
+  -e CLOUDINARY_CLOUD_NAME=your_cloud_name \
+  -e CLOUDINARY_API_KEY=your_api_key \
+  -e CLOUDINARY_API_SECRET=your_api_secret \
+  -e MAILER_FROM=your_email@gmail.com \
+  -e MAILER_TO=tremartca@gmail.com \
+  -e MAILER_CONTACT_SUBJECT="Nuevo mensaje de contacto" \
+  -e MAILER_DEMAND_SUBJECT="Solicitud de Atención Asignada" \
+  -e OTEL_EXPORTER_OTLP_ENDPOINT=http://signoz-otel-collector:4317 \
   gruastremart-core-api:latest
 ```
 
-### 🚀 Despliegue Automático con GitHub Actions
+### 📈 Observabilidad (SigNoz)
 
-El proyecto utiliza GitHub Actions para CI/CD automático. El workflow (`.github/workflows/deploy.yml`) realiza:
+La telemetría (trazas + métricas) se envía vía OTLP al colector de **SigNoz** usando el agente OpenTelemetry incluido en la imagen:
 
-#### 🔄 Proceso de Despliegue:
-
-1. **Build**: Compila la aplicación con Maven
-2. **Docker**: Construye la imagen Docker
-3. **Transfer**: Copia la imagen al VPS via SCP
-4. **Deploy**: Despliega en Kubernetes (k3s) en el VPS
-
-#### 📋 Configuración Requerida:
-
-**Repository Secrets en GitHub:**
-- `VPS_SSH_HOST`: IP o dominio del VPS
-- `VPS_SSH_USERNAME`: Usuario SSH del VPS
-- `GPG_PASSPHRASE`: Passphrase para descifrar la clave SSH
-- `ENV_FILE`: Archivo `.env` con variables de entorno (opcional)
-
-**Archivos en el VPS:**
-- `/home/k3s-deployments/gruastremart-core-api/.env` - Variables de entorno
-- `/home/k3s-deployments/gruastremart-core-api/deploy-gruastremart-core-api.yml` - Configuración de Kubernetes
-
-#### 🔐 Gestión de Secrets en Kubernetes:
-
-El workflow automáticamente:
-- Crea/actualiza el Secret `gruastremart-core-env` desde el archivo `.env`
-- Aplica la configuración de deployment
-- Reinicia el deployment para aplicar cambios
-
-```bash
-# El Secret se crea automáticamente con:
-kubectl create secret generic gruastremart-core-env \
-  --from-env-file=/path/to/.env
-```
-
-### ⚙️ Configuración de Entornos
-
-La aplicación soporta múltiples perfiles:
-
-- **local**: Desarrollo local
-- **test**: Pruebas automatizadas  
-- **des**: Desarrollo/Staging
-- **prod**: Producción
+- El `Dockerfile` descarga `opentelemetry-javaagent.jar` y arranca la JVM con `-javaagent`.
+- El endpoint del colector se configura con `OTEL_EXPORTER_OTLP_ENDPOINT` (default `http://signoz-otel-collector:4317`, gRPC).
+- Instrumentación automática: Spring Web/MVC, MongoDB, HTTP client, Micrometer.
+- En **Coolify**, basta con sobreescribir `OTEL_EXPORTER_OTLP_ENDPOINT` apuntando al colector de SigNoz (p. ej. `http://signoz-otel-collector:4317` si está en la misma red, o la URL pública).
+- Logs con `traceId`/`spanId` para correlación (patrón en `application.yml`).
 
 ### 🏥 Health Checks
 
-La aplicación incluye endpoints de salud:
+La aplicación incluye un endpoint de salud expuesto públicamente (whitelisted en Spring Security):
+
 - `/gruastremart-core-api/actuator/health` - Estado general
-- `/gruastremart-core-api/actuator/info` - Información de la aplicación
+
+> Nota: el resto de endpoints de Actuator (`prometheus`, `metrics`, `traces`, `info`) se deshabilitaron; solo `health` queda expuesto.
 
 ## Documentación API
 
@@ -362,13 +380,16 @@ Para pruebas y desarrollo:
 - ✅ Sistema de notificaciones y alertas automáticas
 - ✅ Recuperación y cambio de contraseñas
 - ✅ Cliente Feign para APIs externas
+- ✅ Sistema de pagos (pre-servicio y post-servicio) con comprobantes vía Cloudinary y flujo de verificación/rechazo
+- ✅ Cancelación y completado de demandas
 
-### 🚧 En Desarrollo
+### 🚧 En Desarrollo / Pendiente
 
 - 🚧 Dashboard de métricas y analytics
-- 🚧 Integración con sistemas de pago
 - 🚧 API de reportes y estadísticas
 - 🚧 Sistema de calificaciones y reviews
+- 🚧 Migración de polling a WebSocket/SSE para tiempo real
+- 🚧 Tests unitarios de `PaymentService`/`PaymentController`
 
 ## Contribución
 
@@ -398,5 +419,5 @@ Para contribuir al proyecto:
 ---
 
 **Versión**: 1.0-SNAPSHOT  
-**Última actualización**: Agosto 2025  
+**Última actualización**: Agosto 2026  
 **Mantenido por**: Equipo GruasTreMart/WebTechnologySoftware
