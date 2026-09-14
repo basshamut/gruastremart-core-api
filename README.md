@@ -265,8 +265,31 @@ La telemetría (trazas + métricas) se envía vía OTLP al colector de **SigNoz*
 - El `Dockerfile` descarga `opentelemetry-javaagent.jar` y arranca la JVM con `-javaagent`.
 - El endpoint del colector se configura con `OTEL_EXPORTER_OTLP_ENDPOINT` (default `http://signoz-otel-collector:4317`, gRPC).
 - Instrumentación automática: Spring Web/MVC, MongoDB, HTTP client, Micrometer.
-- En **Coolify**, basta con sobreescribir `OTEL_EXPORTER_OTLP_ENDPOINT` apuntando al colector de SigNoz (p. ej. `http://signoz-otel-collector:4317` si está en la misma red, o la URL pública).
+- En **Coolify**, el endpoint depende de cómo se expone el colector:
+  - **Misma red Docker**: `OTEL_EXPORTER_OTLP_ENDPOINT=http://signoz-otel-collector:4317` con `OTEL_EXPORTER_OTLP_PROTOCOL=grpc`.
+  - **Vía proxy de Coolify (URL pública)**: `OTEL_EXPORTER_OTLP_ENDPOINT=http://otelcollectorhttp-<hash>.<ip>.sslip.io` con `OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf` (el proxy expone el 4318 del colector en el puerto 80).
 - Logs con `traceId`/`spanId` para correlación (patrón en `application.yml`).
+
+### 🤖 MCP de SigNoz (opencode/Claude)
+
+Para consultar SigNoz desde el agente vía MCP (binario `signoz-mcp-server`):
+
+```jsonc
+"signoz": {
+  "type": "local",
+  "command": ["/path/to/signoz-mcp-server"],
+  "environment": {
+    "SIGNOZ_URL": "http://<tu-instancia-signoz>",
+    "SIGNOZ_API_KEY": "<api-key>",
+    "LOG_LEVEL": "info"
+  },
+  "enabled": true
+}
+```
+
+- La API key se crea en SigNoz → **Settings → API Keys**.
+- Herramientas disponibles: `signoz_list_services`, `signoz_query_metrics`, `signoz_search_traces`, `signoz_search_logs`, `signoz_list_alerts`, dashboards, etc.
+- Verifica con: *"lista los servicios en SigNoz"*.
 
 ### 🏥 Health Checks
 
